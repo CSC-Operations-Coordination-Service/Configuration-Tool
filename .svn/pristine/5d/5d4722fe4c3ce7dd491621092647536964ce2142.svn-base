@@ -1,0 +1,389 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} App Conversations {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->  
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="page-inner page-inner-fill">
+    <div class="conversations">
+        <div class="message-header">
+            <div class="message-title">
+                <a class="btn btn-secondary btn-link" href="messages.html">
+                    <i class="fa fa-flip-horizontal fa-share"></i>
+                </a>
+                <div class="user ml-2">
+                    <div class="avatar avatar-offline">
+                        <img src="/static/assets/img/chadengle.jpg" alt="..." class="avatar-img rounded-circle border border-white">
+                    </div>
+                    <div class="info-user ml-2">
+                        <span class="name">Chad</span>
+                        <span class="last-active">Active 2h ago</span>
+                    </div>
+                </div>
+                <div class="ml-auto">
+                    <button class="btn btn-secondary btn-link">
+                        <i class="fa fa-user-plus"></i>
+                    </button>
+                    <button class="btn btn-secondary btn-link page-sidebar-toggler d-xl-none">
+                        <i class="fa fa-angle-double-left"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="conversations-body">
+            <div class="conversations-content bg-black2">
+                <div class="message-content-wrapper">
+                    <div class="message message-in">
+                        <div class="avatar avatar-sm">
+                            <img src="/static/assets/img/chadengle.jpg" alt="..." class="avatar-img rounded-circle border border-white">
+                        </div>
+                        <div class="message-body">
+                            <div class="message-content">
+                                <div class="name">Chad</div>
+                                <div class="content">Hello, Rian</div>
+                            </div>
+                            <div class="date">12.31</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-content-wrapper">
+                    <div class="message message-out">
+                        <div class="message-body">
+                            <div class="message-content">
+                                <div class="content">
+                                    Hello, Chad
+                                </div>
+                            </div>
+                            <div class="message-content">
+                                <div class="content">
+                                    What's up?
+                                </div>
+                            </div>
+                            <div class="date">12.35</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-content-wrapper">
+                    <div class="message message-in">
+                        <div class="avatar avatar-sm">
+                            <img src="/static/assets/img/chadengle.jpg" alt="..." class="avatar-img rounded-circle border border-white">
+                        </div>
+                        <div class="message-body">
+                            <div class="message-content">
+                                <div class="name">Chad</div>
+                                <div class="content">
+                                    Thanks
+                                </div>
+                            </div>
+                            <div class="message-content">
+                                <div class="content">
+                                    When is the deadline of the project we are working on ?
+                                </div>
+                            </div>
+                            <div class="date">13.00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-content-wrapper">
+                    <div class="message message-out">
+                        <div class="message-body">
+                            <div class="message-content">
+                                <div class="content">
+                                    The deadline is about 2 months away
+                                </div>
+                            </div>
+                            <div class="date">13.10</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="message-content-wrapper">
+                    <div class="message message-in">
+                        <div class="avatar avatar-sm">
+                            <img src="/static/assets/img/chadengle.jpg" alt="..." class="avatar-img rounded-circle border border-white">
+                        </div>
+                        <div class="message-body">
+                            <div class="message-content">
+                                <div class="name">Chad</div>
+                                <div class="content">
+                                    Ok, Thanks !
+                                </div>
+                            </div>
+                            <div class="date">13.15</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="messages-form bg-black">
+            <div class="messages-form-control">
+                <input type="text" placeholder="Type here" class="form-control input-pill input-solid message-input">
+            </div>
+            <div class="messages-form-tool">
+                <a href="#" class="attachment">
+                    <i class="flaticon-file"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="page-sidebar">
+    <header class="sidebar-header d-xl-none">
+        <a class="back">
+            <i class="breadcrumb-icon fa fa-angle-left mr-2"></i>Back
+        </a>
+    </header>
+    <div class="page-sidebar-section pb-3">
+        <div class="page-navs mb-4">
+            <div class="nav-scroller">
+                <div class="nav nav-tabs nav-line nav-color-secondary">
+                    <a class="nav-link active show" data-toggle="tab" href="#tab1">Contact Info
+                    </a>
+                    <a class="nav-link" data-toggle="tab" href="#tab2">Media</a>
+                    <a class="nav-link" data-toggle="tab" href="#tab3">Action</a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center">
+            <div class="avatar avatar-xxl mb-3">
+                <img src="/static/assets/img/chadengle.jpg" alt="..." class="avatar-img rounded-circle border border-white">
+            </div>
+            <h4 class="fw-bold">Chad</h4>
+            <h6 class="text-muted mb-3">Banda Aceh . Since Jun 12, 2018</h6>
+            <div class="row m-0">
+                <div class="col-4">
+                    <div class="metric">
+                        <h4 class="metric-value fw-bold">125</h4>
+                        <p class="metric-label fw-bold">Post</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="metric">
+                        <h4 class="metric-value fw-bold">25K</h4>
+                        <p class="metric-label fw-bold">Followers</p>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="metric">
+                        <h4 class="metric-value fw-bold">134</h4>
+                        <p class="metric-label fw-bold">Following</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="list-group list-group-file-item list-group-reflow list-group-flush list-group-divider mt-3">
+            <!-- .list-group-header -->
+            <div class="list-group-header"> Today </div>
+            <!-- /.list-group-header -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-primary">
+                        <span class="fa fa-file-pdf"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">pengertian-agregat.pdf</a>
+                    </h4>
+                    <p class="list-group-item-text"> 1.08 MB by Emma Stone </p>
+                    <p class="list-group-item-text small"> 11:40pm </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-primary">
+                        <span class="fa fa-file-pdf"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">Baked-Chicken-and-Spinach-Flautas.pdf</a>
+                    </h4>
+                    <p class="list-group-item-text"> 0.39 MB by Peter Willis </p>
+                    <p class="list-group-item-text small"> 5:22pm </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-danger">
+                        <span class="fa fa-file-image"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">Cajun Chicken Egg Pasta.jpg</a>
+                    </h4>
+                    <p class="list-group-item-text"> 0.93 MB by Danielle Garza </p>
+                    <p class="list-group-item-text small"> 9:32pm </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-header -->
+            <div class="list-group-header"> Jan 28, 2018 </div>
+            <!-- /.list-group-header -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-secondary">
+                        <span class="fa fa-file-archive"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">Atlantis_regular.zip</a>
+                    </h4>
+                    <p class="list-group-item-text"> 0.53 MB by Jimmy Chad </p>
+                    <p class="list-group-item-text small"> 3:13am </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-secondary">
+                        <span class="fa fa-file-archive"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">Atlantis_extended.zip</a>
+                    </h4>
+                    <p class="list-group-item-text"> 2.04 MB by John Doe </p>
+                    <p class="list-group-item-text small"> 11:27pm </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-header -->
+            <div class="list-group-header"> Jan 21, 2018 </div>
+            <!-- /.list-group-header -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-primary">
+                        <span class="fa fa-file-pdf"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">Usulan Beasiswa Tahun 2018.pdf</a>
+                    </h4>
+                    <p class="list-group-item-text"> 1.1 MB by Peter Willis </p>
+                    <p class="list-group-item-text small"> 6:20pm </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-success">
+                        <span class="fa fa-file-excel"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">Daftar Peserta Ujian.xlsx</a>
+                    </h4>
+                    <p class="list-group-item-text"> 0.37 MB by Peter Willis </p>
+                    <p class="list-group-item-text small"> 1:32pm </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-info">
+                        <span class="fa fa-file-word"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">data_not_verified.docx</a>
+                    </h4>
+                    <p class="list-group-item-text"> 0.94 MB by Kathryn Black </p>
+                    <p class="list-group-item-text small"> 5:11am </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+            <!-- .list-group-header -->
+            <div class="list-group-header"> Jan 19, 2018 </div>
+            <!-- /.list-group-header -->
+            <!-- .list-group-item -->
+            <div class="list-group-item align-items-start">
+                <div class="list-group-item-figure">
+                    <a href="#" class="tile tile-circle bg-warning">
+                        <span class="fa fa-file-powerpoint"></span>
+                    </a>
+                </div>
+                <div class="list-group-item-body">
+                    <h4 class="list-group-item-title text-truncate">
+                        <a href="#">mockup-presentation.pptx</a>
+                    </h4>
+                    <p class="list-group-item-text"> 0.59 MB by Kathryn Black </p>
+                    <p class="list-group-item-text small"> 6:50am </p>
+                </div>
+                <div class="list-group-item-figure">
+                    <button class="btn btn-sm btn-light">
+                        <i class="fa fa-download"></i>
+                    </button>
+                </div>
+            </div>
+            <!-- /.list-group-item -->
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="/static/assets/js/setting-demo.js"></script>
+
+{% endblock javascripts %}

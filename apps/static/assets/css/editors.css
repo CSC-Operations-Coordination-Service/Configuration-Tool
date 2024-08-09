@@ -1,0 +1,128 @@
+.content-model-editor {
+  height: 100%;
+  overflow: hidden;
+  padding: 0 1rem 1rem 1rem;
+  transition: all 0.3s; }
+  @media (prefers-reduced-motion: reduce) {
+    .content-model-editor {
+      transition: none; } }
+  @media (min-width: 992px) {
+    .content-model-editor {
+      margin-left: 260px; } }
+
+/* Style the list */
+ /* Style the list */
+.breadcrumb {
+  padding: 10px 16px;
+  list-style: none;
+  background-color: transparent;
+}
+
+ul.breadcrumb {
+  padding: 10px 16px;
+  list-style: none;
+  background-color: transparent;
+}
+
+/* Display list items side by side */
+ul.breadcrumb li {
+  display: inline;
+  font-size: 18px;
+}
+
+/* Add a slash symbol (/) before/behind each list item */
+ul.breadcrumb li+li:before {
+  padding: 8px;
+  color: black;
+  content: "/\00a0";
+}
+
+/* Add a color to all links inside the list */
+ul.breadcrumb li a {
+  color: #0275d8;
+  text-decoration: none;
+}
+
+/* Add a color on mouse-over */
+ul.breadcrumb li a:hover {
+  color: #01447e;
+  text-decoration: underline;
+}
+
+.row-model-editor {
+  --bs-gutter-x: 1.5rem;
+  --bs-gutter-y: 0;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: calc(var(--bs-gutter-y) * -1);
+  margin-right: calc(var(--bs-gutter-x) * -.5);
+  margin-left: calc(var(--bs-gutter-x) * -.5);
+  padding-bottom: 1.25rem;
+  height: 100%; }
+  .row-model-editor > * {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    padding-right: calc(var(--bs-gutter-x) * .5);
+    padding-left: calc(var(--bs-gutter-x) * .5);
+    margin-top: var(--bs-gutter-y); }
+
+.card-fragment-editor {
+  height: 100%;
+  max-width: 40%
+  }
+
+.popup {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -250px;
+    margin-left: -275px;
+    width: 450px;
+    overflow: auto;
+    transition: all .5s ease-in-out;
+    z-index: 3;
+}
+
+.config-popup {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -340px;
+    margin-left: -415px;
+    width: 770px;
+    overflow: auto;
+    transition: all .5s ease-in-out;
+    z-index: 21;
+}
+
+.dashboard-popup {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -270px;
+    margin-left: -375px;
+    width: 750px;
+    overflow: auto;
+    transition: all .5s ease-in-out;
+    z-index: 21;
+}
+
+.fixed-height-250 {
+    height: 250px;
+    overflow-y: scroll;
+}
+
+.max-height-overflow {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+/* Change position of Bootstrap datatable filter */
+div.dataTables_wrapper div.dataTables_filter {
+    text-align: left !important;
+}

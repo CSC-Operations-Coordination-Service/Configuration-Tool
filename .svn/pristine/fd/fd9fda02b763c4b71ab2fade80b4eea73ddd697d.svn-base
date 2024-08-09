@@ -1,0 +1,272 @@
+{% extends "layouts/editor.html" %}
+
+{% block title %} jsPlumb Toolkit - build Flowcharts, Diagrams and connectivity based applications fast {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:400,700" xmlns="http://www.w3.org/1999/html">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link rel="stylesheet" href="/static/assets/css/editors.css">
+    <link rel="stylesheet" href="/static/assets/css/flowchart.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- Configuration Tool functional scripts -->
+    <script defer>
+        window.onload = function() {
+            servicesEditor.init();
+        };
+    </script>
+
+    <!-- HTML page section -->
+    <div class="page-inner">
+
+    <!-- Breadcrumb -->
+    <div class="page-header">
+        <h4 class="page-title">Configuration</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="/">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Services</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main page content -->
+    <div class="row">
+        <div class="col-md-12">
+
+            <!-- Services Editor -->
+            <div class="card">
+
+                <!-- Card header -->
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="card-title">Services Editor</h4>
+                    </div>
+                </div>
+
+                <!-- Card body-->
+                <div class="card-body">
+
+                    <!-- Services Editor -->
+                    <div class="row-model-editor">
+
+                        <!-- [BEG] Services Editor -->
+                        <div class="row ml-1 col-md-12" id="pb-editor-container">
+                            <input id="service-id" type="hidden">
+
+                            <!-- Service editor widgets -->
+                            <div class="row form-group col-md-12">
+
+                                <!-- Declare external services -->
+                                <div class="row col-md-12">
+                                    <div class="form-check">
+                                        <label class="form-check-label" for="external-service">
+                                            <input id="external-service" class="form-check-input" type="checkbox">
+                                                <span class="form-check-sign">Check to mark the service as "External"</span>
+                                            </input>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- First column -->
+                                <div class="col-md-4">
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label for="service-type">Service Type<span class="required">*</span></label>
+                                            <select class="form-control" id="service-type"></select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="service-provider">Service Provider</label>
+                                            <input class="form-control" id="service-provider" placeholder="Enter the Service Provider"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label for="satellite-units">Satellite Unit(s)</label>
+                                            <input class="form-control" id="satellite-units" placeholder="Enter the Satellite Units"
+                                                   type="text">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="interface-point">Interface Point</label>
+                                            <select class="form-control" id="interface-point"></select>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label for="cloud-provider">Cloud Provider</label>
+                                            <input class="form-control" id="cloud-provider" placeholder="Enter the Cloud Provider"
+                                                   type="text">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="rolling-period">Rolling Period [days]</label>
+                                            <input class="form-control" id="rolling-period" placeholder="Enter the Rolling Period"
+                                                   type="text">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Second column -->
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label for="operational-ipfs-wysiwyg-editor">Operational IPF (if applicable)</label>
+                                        <div id="operational-ipfs-wysiwyg-editor"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Third column -->
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label for="references-wysiwyg-editor">References</label>
+                                        <div id="references-wysiwyg-editor"></div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Save button -->
+                            <div class="col-md-12">
+                                <div class="float-right">
+                                    <button id="save-proc-btn" style="display: inline-block; width:110px;" class="btn btn-primary mt-2 ml-auto mr-4 animate-up-2 " type="button"
+                                            onclick="servicesEditor.saveService();">
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- [END] Services Editor -->
+
+                        <!-- [BEG] Services table section -->
+                        <div class="row mt-3 col-md-12" id="pb-table-container">
+                            <div class="col-md-12" style="background: white">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-sm" cellspacing="0" width="100%" style="width: 97%" id="services-datatable">
+                                        <thead>
+                                            <tr>
+                                                <th>Service Id</th>
+                                                <th style="max-width: 80px">Service Type</th>
+                                                <th style="max-width: 80px">Provider</th>
+                                                <th style="max-width: 80px">Satellite Unit(s)</th>
+                                                <th style="max-width: 80px">Interface Point</th>
+                                                <th style="max-width: 70px">Cloud Provider</th>
+                                                <th style="max-width: 50px">Rolling Period</th>
+                                                <th style="max-width: 250px">Operational IPFs</th>
+                                                <th>References</th>
+                                                <th style="max-width: 70px">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- [END] Services table section -->
+
+                    </div>
+
+                    <!-- Interfaces Editor -->
+                    <div class="row-model-editor mt-3">
+
+                        <!-- [BEG] Interfaces Editor -->
+                        <h4 class="card-title">Interfaces Configuration</h4>
+                        <div class="row ml-1 col-md-12 mt-2" id="if-editor-container">
+                            <input id="interface-id" type="hidden">
+
+                            <!-- Interface editor widgets -->
+                            <div class="row form-group col-md-12">
+                                <div class="col-md-3">
+                                    <label for="source-service-type">Source Service Type<span class="required">*</span></label>
+                                    <select class="form-control" id="source-service-type"></select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="source-service-provider">Source Service Provider<span class="required">*</span></label>
+                                    <select class="form-control" id="source-service-provider"></select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="target-service-type">Target Service Type<span class="required">*</span></label>
+                                    <select class="form-control" id="target-service-type"></select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="target-service-provider">Target Service Provider<span class="required">*</span></label>
+                                    <select class="form-control" id="target-service-provider"></select>
+                                </div>
+                                <div class="col-md-3 mt-3">
+                                    <label for="interface-status">Status<span class="required">*</span></label>
+                                    <select class="form-control" id="interface-status"></select>
+                                </div>
+                            </div>
+
+                            <!-- Save button -->
+                            <div class="col-md-12">
+                                <div class="float-right">
+                                    <button id="save-if-btn" style="display: inline-block; width:110px;" class="btn btn-primary mt-2 ml-auto mr-4 animate-up-2 " type="button"
+                                            onclick="servicesEditor.saveInterface();">
+                                        Save
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- [END] Interfaces Editor -->
+
+                        <!-- [BEG] Interfaces table section -->
+                        <div class="row mt-3 col-md-12" id="if-table-container">
+                            <div class="col-md-12" style="background: white">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-sm" cellspacing="0" width="100%" style="width: 97%" id="interfaces-datatable">
+                                        <thead>
+                                            <tr>
+                                                <th>Interface Id</th>
+                                                <th>Source Service Type</th>
+                                                <th>Source Service Provider</th>
+                                                <th>Target Service Type</th>
+                                                <th>Target Service Provider</th>
+                                                <th style="max-width: 100px">Status</th>
+                                                <th style="max-width: 70px">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- [END] Interfaces table section -->
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+    $('#processor-release-date').datetimepicker({
+        format: 'DD/MM/YYYY',
+    });
+    $('#processor-validity-start').datetimepicker({
+        format: 'DD/MM/YYYY',
+    });
+    $('#processor-validity-end').datetimepicker({
+        format: 'DD/MM/YYYY',
+    });
+</script>
+{% endblock javascripts %}

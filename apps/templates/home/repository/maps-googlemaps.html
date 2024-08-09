@@ -1,0 +1,182 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Google Maps {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->  
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="page-inner">
+    <div class="page-header">
+        <h4 class="page-title">Google Maps</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="#">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Maps</a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Google Maps</a>
+            </li>
+        </ul>
+    </div>
+    <div class="page-category">
+        <a href="https://hpneo.github.io/gmaps/">gmaps.js</a> allows you to use the potential of Google Maps in a simple way. Read <a href="https://hpneo.github.io/gmaps/">Full Documentation</a>.
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Basic Maps</div>
+                </div>
+                <div class="card-body">
+                    <div id="map-basic" class="map-demo"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Markers</div>
+                </div>
+                <div class="card-body">
+                    <div id="map-markers" class="map-demo"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Routes</div>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-black mb-2" id="start_travel">Start</button>
+                    <div id="map-routes" class="map-demo"></div>
+                    <ul id="instructions" class="mt-2">
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Geocoding</div>
+                </div>
+                <div class="card-body">
+                    <form id="geocoding_form">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="address" placeholder="address...">
+                            <div class="input-group-append">
+                                <button class="btn btn-primary" id="submit" type="submit"><i class="fa fa-search"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="map-geocoding" class="map-demo"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1On32WMJzaErjXZhvYcEvYDQ_5PvlMCw"></script>
+<script src="/static/assets/js/plugin/gmaps/gmaps.js"></script>
+
+<script src="/static/assets/js/setting-demo2.js"></script>
+<script>
+    $(document).ready(function(){
+        var mapBasic = new GMaps({
+            div: '#map-basic',
+            lat: -12.043333,
+            lng: -77.028333
+        });
+
+        var mapMarkers = new GMaps({
+            div: '#map-markers',
+            lat: -12.043333,
+            lng: -77.03,
+        });
+
+        mapMarkers.addMarker({
+            lat: -12.043333,
+            lng: -77.03,
+            title: 'Lima',
+            details: {
+                database_id: 42,
+                author: 'HPNeo'
+            },
+            click: function(e){
+                if(console.log)
+                    console.log(e);
+                alert('You clicked in this marker');
+            }
+        });
+
+        //map routes
+        mapRoutes = new GMaps({
+            div: '#map-routes',
+            lat: -12.043333,
+            lng: -77.028333
+        });
+
+        $('#start_travel').click(function(e){
+            e.preventDefault();
+            mapRoutes.travelRoute({
+                origin: [-12.044012922866312, -77.02470665341184],
+                destination: [-12.090814532191756, -77.02271108990476],
+                travelMode: 'driving',
+                step: function(e){
+                    $('#instructions').append('<li>'+e.instructions+'</li>');
+                    $('#instructions li:eq('+e.step_number+')').delay(450*e.step_number).fadeIn(200, function(){
+                        mapRoutes.setCenter(e.end_location.lat(), e.end_location.lng());
+                        mapRoutes.drawPolyline({
+                            path: e.path,
+                            strokeColor: '#131540',
+                            strokeOpacity: 0.6,
+                            strokeWeight: 6
+                        });
+                    });
+                }
+            });
+        });
+
+        // map geocoding
+        mapGeocoding = new GMaps({
+            div: '#map-geocoding',
+            lat: -12.043333,
+            lng: -77.028333
+        });
+        $('#geocoding_form').submit(function(e){
+            e.preventDefault();
+            GMaps.geocode({
+                address: $('#address').val().trim(),
+                callback: function(results, status){
+                    if(status=='OK'){
+                        var latlng = results[0].geometry.location;
+                        mapGeocoding.setCenter(latlng.lat(), latlng.lng());
+                        mapGeocoding.addMarker({
+                            lat: latlng.lat(),
+                            lng: latlng.lng()
+                        });
+                    }
+                }
+            });
+        });
+    })
+</script>
+
+{% endblock javascripts %}

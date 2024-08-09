@@ -1,0 +1,62 @@
+
+<!-- Sidebar -->
+<div class="sidebar sidebar-style-2" data-background-color="dark2">
+
+	<div class="sidebar-wrapper scrollbar scrollbar-inner">
+		<div class="sidebar-content">
+			<div class="user">
+				<div class="avatar-sm float-left mr-2">
+					<img src="/static/assets/img/profile.jpg" alt="..." class="avatar-img rounded-circle">
+				</div>
+				<div class="info">
+					<a data-toggle="collapse" href="#collapseExample" aria-expanded="true">
+						<span>
+							{{ current_user.username }}
+							<span class="user-level">
+								{{ current_user.username }}
+							</span>
+							<span class="caret"></span>
+						</span>
+					</a>
+					<div class="clearfix"></div>
+				</div>
+			</div>
+			<ul class="nav nav-primary" id="sidebar-navigation-menu">
+				<li class="nav-item {% if 'home' in segment %} active {% elif 'interface' in segment %} active
+						{% else %} {% endif %}">
+					<a data-toggle="collapse" href="#home" class="collapse" aria-expanded="false">
+						<i class="fas fa-home"></i>
+						<p>Home</p>
+						<span class="caret"></span>
+					</a>
+					<div class="collapse {% if 'home' in segment %} show {% elif 'interface' in segment %} show
+							{% elif 'service' in segment %} show {% else %} {% endif %}" id="home">
+						<ul class="nav nav-collapse">
+							<li class=" {% if 'home' in segment %} active {% elif 'interface' in segment %} active
+									{% else %} {% endif %}">
+								<a href="/interfaces-viewer.html?id=8cf730fa_82ce_11ee_8b95_15e6d0d67ea8">
+									<span class="sub-item">Interfaces</span>
+								</a>
+							</li>
+							<li class=" {% if 'home' in segment %} active {% elif 'service' in segment %} active
+									{% else %} {% endif %}">
+								<a href="/services-viewer.html?id=9addbe90_e148_11ee_9953_0242ac140004">
+									<span class="sub-item">Services</span>
+								</a>
+							</li>
+							<li class=" {% if 'home' in segment %} active {% elif 'processor' in segment %} active
+									{% else %} {% endif %}">
+								<a href="/processors-viewer.html?id=a06c9926_d7b6_11ee_bfcd_0242c0a89003">
+									<span class="sub-item">Processors</span>
+								</a>
+							</li>
+						</ul>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+</div>
+<!-- End Sidebar -->
+        
