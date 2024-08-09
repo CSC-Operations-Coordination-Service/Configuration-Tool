@@ -1,0 +1,121 @@
+{% extends "layouts/editor.html" %}
+
+{% block title %} jsPlumb Toolkit - build Flowcharts, Diagrams and connectivity based applications fast {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:400,700" xmlns="http://www.w3.org/1999/html">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/vis/4.8.2/vis.min.css'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="/static/assets/css/processors.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- Configuration Tool functional scripts -->
+    <script defer>
+        window.onload = function() {
+            procViewer.init();
+        };
+    </script>
+
+    <!-- HTML page section -->
+    <div class="page-inner">
+
+    <!-- Breadcrumb -->
+    <div class="page-header">
+        <h4 class="page-title">Configuration</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="/">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Processors</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main page content -->
+    <div class="row">
+        <div class="col-md-12">
+
+            <!-- Processors Online Help -->
+            <div class="card">
+                <div class="card-header" id="heading-description">
+                    <h5 class="mb-0">
+                        <a role="button" data-toggle="collapse" href="#description"
+                           aria-expanded="false" aria-controls="description"
+                           style="text-decoration: none">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description
+                        </a>
+                    </h5>
+                </div>
+                <div id="description" class="collapse hide" data-parent="#accordion"
+                     aria-labelledby="heading-description">
+                    <div class="card-body">
+                        This view shows the complete list of the releases of the Copernicus Sentinels processors, on
+                        an interactive timeline. The timeline can be zoomed in / out using the mouse wheel, and dragged
+                        to the left / right by moving the mouse while keeping left-hand button pressed.<br/>
+                        By clicking on a colored box, the details relevant to the selected processor release is
+                        displayed in the lower part of the screen.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Processors View -->
+            <div class="card">
+
+                <!-- Card header -->
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <h4 class="card-title"> Processors Releases</h4>
+                    </div>
+                </div>
+
+                <!-- Card body-->
+                <div class="card-body">
+
+                    <!-- Processors search bar -->
+                    <div class="row col-md-12">
+                        <div class="flot-right ml-auto mr-0 mb-3">
+                            <label>Search:
+                                <input aria-controls="basic-datatables-data-takes"
+                                     class="form-control form-control-sm"
+                                     id="processors-text-filter" placeholder="" type="text">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- The Processors Timeline control -->
+                    <div id="processors-timeline"></div>
+
+                    <!-- The Processors release details panel -->
+                    <div id="processor-release-details" class="mt-2 col-md-12"></div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+
+        // Filter processors releases
+        $('#processors-text-filter').on('input', function(event) {
+            procViewer.filterEvents($(this).val());
+        });
+
+</script>
+{% endblock javascripts %}

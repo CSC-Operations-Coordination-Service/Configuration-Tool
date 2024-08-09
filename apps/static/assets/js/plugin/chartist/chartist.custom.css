@@ -1,0 +1,138 @@
+/* Customize grid and lines */
+.ct-label {
+   fill: #8d9498;
+   color: #8d9498;
+}
+
+.ct-grid {
+   stroke: #8d9498;
+}
+
+/* Customize bars */
+.ct-series-a .ct-bar {
+   background-color: #464D68;
+   border-color: #464D68;
+   stroke: #464D68;
+}
+
+.ct-series-b .ct-bar {
+   background-color: #F8BD7A;
+   border-color: #F8BD7A;
+   stroke: #F8BD7A;
+}
+
+.ct-series-c .ct-bar {
+   background-color: #2CA58D;
+   border-color: #2CA58D;
+   stroke: #2CA58D;
+}
+
+.ct-series-d .ct-bar {
+   background-color: #31316A;
+   border-color: #31316A;
+   stroke: #31316A;
+}
+
+.ct-series-e .ct-bar {
+   background-color: #C96480;
+   border-color: #C96480;
+   stroke: #C96480;;
+}
+
+.ct-series-f .ct-bar {
+   background-color: #b140c1;
+   border-color: #b140c1;
+   stroke: #b140c1;
+}
+
+.ct-series-g .ct-bar {
+   background-color: #2ebdd4;
+   border-color: #2ebdd4;
+   stroke: #2ebdd4;
+}
+
+/* Customize colors for lines */
+.ct-series-a .ct-line {
+   background-color: #464D68;
+   border-color: #464D68;
+   stroke: #464D68;
+}
+
+.ct-series-b .ct-line {
+   background-color: #F8BD7A;
+   border-color: #F8BD7A;
+   stroke: #F8BD7A;
+}
+
+.ct-series-c .ct-line {
+   background-color: #2CA58D;
+   border-color: #2CA58D;
+   stroke: #2CA58D;
+}
+
+.ct-series-d .ct-line {
+   background-color: #31316A;
+   border-color: #31316A;
+   stroke: #31316A;
+}
+
+.ct-series-e .ct-line {
+   background-color: #C96480;
+   border-color: #C96480;
+   stroke: #C96480;;
+}
+
+.ct-series-f .ct-line {
+   background-color: #b140c1;
+   border-color: #b140c1;
+   stroke: #b140c1;
+}
+
+.ct-series-g .ct-line {
+   background-color: #2ebdd4;
+   border-color: #2ebdd4;
+   stroke: #2ebdd4;
+}
+
+/* Customize colors for points */
+.ct-series-a .ct-point {
+   background-color: #464D68;
+   border-color: #464D68;
+   stroke: #464D68;
+}
+
+.ct-series-b .ct-point {
+   background-color: #F8BD7A;
+   border-color: #F8BD7A;
+   stroke: #F8BD7A;
+}
+
+.ct-series-c .ct-point {
+   background-color: #2CA58D;
+   border-color: #2CA58D;
+   stroke: #2CA58D;
+}
+
+.ct-series-d .ct-point {
+   background-color: #31316A;
+   border-color: #31316A;
+   stroke: #31316A;
+}
+
+.ct-series-e .ct-point {
+   background-color: #C96480;
+   border-color: #C96480;
+   stroke: #C96480;;
+}
+
+.ct-series-f .ct-point {
+   background-color: #b140c1;
+   border-color: #b140c1;
+   stroke: #b140c1;
+}
+
+.ct-series-g .ct-point {
+   background-color: #2ebdd4;
+   border-color: #2ebdd4;
+   stroke: #2ebdd4;
+}

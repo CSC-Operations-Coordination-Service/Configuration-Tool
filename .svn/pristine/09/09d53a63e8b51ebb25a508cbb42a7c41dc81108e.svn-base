@@ -1,0 +1,19 @@
+
+    <footer class="footer">
+        <div class="container-fluid">
+            <nav class="pull-left">
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="nav-link" 
+                           target="_blank" rel="noopener noreferrer"
+                           href="https://appseed.us/admin-dashboards/flask-dashboard-atlantis-dark-pro">Flask Atlantis Dark PRO</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="copyright ml-auto">
+                &copy; <a target="_blank" rel="noopener noreferrer"
+                          href="http://www.themekita.com?ref=appseed">ThemeKita</a> 
+                        - coded by <a target="_blank" rel="noopener noreferrer" href="http://appseed.us">AppSeed</a>.
+            </div>
+        </div>
+    </footer>

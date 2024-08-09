@@ -1,0 +1,269 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Dashboard {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+    <link href="/static/assets/css/editors.css" rel="stylesheet">
+    <link href="/static/assets/js/plugin/chartist/chartist.min.css" rel="stylesheet">
+    <link href="/static/assets/js/plugin/chartist/chartist.custom.css" rel="stylesheet">
+    <link href="/static/assets/js/plugin/chartist-plugin-legend/chartist-plugin-legend.css" rel="stylesheet">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- HTML page section -->
+<div class="page-inner">
+
+    <!-- Breadcrumb -->
+    <div class="page-header">
+        <h4 class="page-title">Dashboard</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="/home">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Dashboard</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main page content -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+
+                <!-- Card header -->
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+
+                        <!-- Scenario Name label -->
+                        <div id="dashboard-scenario-id" class="card-title"></div>
+
+                        <!-- Dashboard upper toolbar -->
+                        <div class="row float-right float-right ml-auto mr-2">
+                            <div class="form-group">
+                                <div class="row mr-0" id="button-toolbar" name="button-toolbar">
+                                    <button id="dashboard-download-view-select" class="btn btn-primary ml-1"
+                                            onclick="dashboard.downloadAllChart(this);">
+                                        <span class="btn-label">
+                                            <i class="fas fa-file-excel"></i>
+                                        </span>
+                                        Export charts
+                                    </button>
+                                    <button class="btn btn-primary ml-1" data-toggle="modal" data-target="#config-view-modal"
+                                            onclick="dashboard.reloadDashboardViews(); $('#config-view-modal').val(null).trigger('change');">
+                                        <span class="btn-label">
+                                            <i class="icon-grid"></i>
+                                        </span>
+                                        Manage views
+                                    </button>
+                                    <button class="btn btn-primary ml-1" data-toggle="modal" data-target="#add-new-chart-modal"
+                                            onclick="dashboard.loadDashboardVariables(false);">
+                                        <span class="btn-label">
+                                            <i class="far fa-chart-bar"></i>
+                                        </span>
+                                        New chart
+                                    </button>
+                                    <button class="btn btn-primary ml-1" data-toggle="modal" data-target="#add-new-chart-modal"
+                                            onclick="dashboard.loadDashboardVariables(true);">
+                                        <span class="btn-label">
+                                            <i class="flaticon-graph"></i>
+                                        </span>
+                                        New comparative chart
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Card body-->
+                <div class="card-body">
+
+                    <!-- [BEG] Dashboard configuration toolbar -->
+                    <div class="row ml-2">
+                        <div>
+                            <div class="row float-left">
+                                <div class="form-group col-md-5 mb-1" style="margin-top: -2px;">
+                                    <label class="float-left" for="chart-daterange">Time range</label>
+                                    <input class="form-control" type="text" id="chart-daterange" name="chart-daterange" value="01/01/2019 - 12/31/2028"/>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="float-left" for="dashboard-view-select">Select view</label>
+                                    <select class="form-control" id="dashboard-view-select" name="view-select" aria-label="Model From"
+                                        onchange="dashboard.changeView(this)">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [END] Dashboard configuration toolbar -->
+
+                    <!-- Dashboard canvas & menus -->
+                    <!-- [BEG] Dashboard views config popup -->
+                    <div class="modal fade" id="config-view-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content" style="background: #202940; width: 600px">
+                                <div class="modal-header no-bd">
+                                    <h2 class="modal-title">Views configuration</h2>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row align-items-center ml-2" id="view_editor" data-id="">
+                                        <div class="form-group">
+                                            <label for="view_name_input">View name</label>
+                                            <input class="form-control" id="view_name_input" name="view_name_input"
+                                                   required
+                                                   type="text">
+                                        </div>
+                                        <div class="col-md-3 mt-4">
+                                            <button class="btn btn-primary"
+                                                    onclick="dashboard.saveDashboardView()">
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table id="datatables-view" class="display table table-striped table-hover" style="width: 100%">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 0%">Id</th>
+                                                    <th style="width: 80%">Name</th>
+                                                    <th style="width: 20%">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                    <div>
+                                        <div class="col-md-12 text-end mt-2">
+                                            <div class="row d-inline">
+                                                <button class="btn btn-primary col-md-3 float-right" data-dismiss="modal" >
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [END] Dashboard views config popup -->
+
+                    <!-- [BEG] New dashboard element popup -->
+                    <div class="modal fade" id="add-new-chart-modal" tabindex="0" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content" style="background: #202940; width: 850px">
+                                <div class="modal-header no-bd">
+                                    <h2 class="modal-title">New dashboard chart</h2>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row align-bottom ml-2">
+                                        <div class="col-md-5 form-group">
+                                            <label for="chart_name_input">Chart name</label>
+                                            <input class="form-control" id="chart_name_input" name="chart_name_input" required type="text">
+                                            <input id="dashboard_element_chart_id" type="hidden">
+                                        </div>
+                                        <div class="col-md-3 mb-3 form-group">
+                                            <label for="dashboard_element_type" >Chart type</label>
+                                            <select class="form-control" id="dashboard_element_type" name="dashboard_element_type"
+                                                    aria-label="">
+                                                <option id="dashboard_element_type_Line" selected value="Line"
+                                                        onclick="document.getElementById('path').setAttribute('disabled', 'disabled');">Lines
+                                                </option>
+                                                <option id="dashboard_element_type_Bar" value="Bar" onclick="document.getElementById('path').removeAttribute('disabled');">Bars
+                                                </option>
+                                                <option id="dashboard_element_type_Stacked_bar" value="Stacked bar" onclick="document.getElementById('path').removeAttribute('disabled');">Stacked bars
+                                                </option>
+                                                <option id="dashboard_element_type_Badge" value="Badge" onclick="document.getElementById('path').removeAttribute('disabled');">Badge
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3 form-group">
+                                            <label for="dashboard_element_size">Size</label>
+                                            <select class="form-control" id="dashboard_element_size" name="dashboard_element_size"
+                                                    aria-label="">
+                                                <option id="dashboard_element_size_small" selected value="small"
+                                                        onclick="document.getElementById('path').setAttribute('disabled', 'disabled');">Small
+                                                </option>
+                                                <option id="dashboard_element_size_medium" value="medium" onclick="document.getElementById('path').removeAttribute('disabled');">Medium
+                                                </option>
+                                                <option id="dashboard_element_size_large" value="large" onclick="document.getElementById('path').removeAttribute('disabled');">Wide
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="row align-bottom ml-2">
+                                        <div class="col-md-5 mb-3 form-group">
+                                            <label for="dashboard_element_view_select">View</label>
+                                            <select class="form-control" id="dashboard_element_view_select" name="dashboard_element_view_select"
+                                                    aria-label="">
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 mb-3 form-group">
+                                            <label for="dashboard_element_chart_scalar">Scalar</label>
+                                            <input class="form-control" id="dashboard_element_chart_scalar" type="text">
+                                        </div>
+                                        <div class="col-md-3 mb-3 form-group">
+                                            <label for="dashboard_element_chart_scalar_units">Units</label>
+                                            <input class="form-control" id="dashboard_element_chart_scalar_units" type="text">
+                                            <input id="dashboard_element_chart_is_comparative" value="false" type="hidden">
+                                        </div>
+                                    </div>
+                                   <div class="table-responsive ml-2">
+                                        <table id="datatables-dashboard-variables" class="display table table-striped table-hover" style="width: 95%">
+                                            <thead>
+                                                <tr>
+                                                    <th width="0%">Id</th>
+                                                    <th width="18%">Select</th>
+                                                    <th>Name</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                    <div>
+                                        <div class="col-md-12 mt-2">
+                                            <button id='dashboard_variable_button_cancel' class="btn btn-primary ml-2 animate-up-2 col-md-3 float-right"
+                                                    data-dismiss="modal" >
+                                                Cancel
+                                            </button>
+                                            <button id='dashboard_variable_button_save' class="btn btn-primary animate-up-2 col-md-3 float-right"
+                                                    onclick="dashboard.addNewChartElement();">
+                                                Add chart
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [END] New dashboard element popup -->
+
+                    <!-- [BEG] Dashboard canvas -->
+                    <div class="row" id="dashboard-canvas"></div>
+                    <!-- [END] Dashboard canvas -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
+{% endblock content %}
+-->
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script type="text/javascript">
+    dashboard.init();
+    users.init();
+</script>
+{% endblock javascripts %} -->
