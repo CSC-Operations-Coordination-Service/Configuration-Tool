@@ -1,0 +1,163 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Owl Carusel {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->  
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="page-inner">
+    <div class="page-header">
+        <h4 class="page-title">Owl Carousel</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="#">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Base</a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Owl Carousel</a>
+            </li>
+        </ul>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Basic</h4>
+                </div>
+                <div class="card-body">
+                    <div id="owl-demo" class="owl-carousel owl-theme owl-img-responsive">
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product1.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product2.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product3.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product4.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product5.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product6.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product7.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product8.jpg" alt="Owl Image"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">One Slide</h4>
+                </div>
+                <div class="card-body">
+                    <div id="owl-demo2" class="owl-carousel owl-theme owl-img-responsive">
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product10.jpeg"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product11.jpeg"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product12.jpeg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Center with loop</h4>
+                </div>
+                <div class="card-body">
+                    <div id="owl-demo3" class="owl-carousel owl-theme owl-img-responsive">
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product1.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product2.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product3.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product4.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product5.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product6.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product7.jpg" alt="Owl Image"></div>
+                        <div class="item"><img class="img-fluid" src="/static/assets/img/examples/product8.jpg" alt="Owl Image"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Auto width without loop</h4>
+                </div>
+                <div class="card-body">
+                    <div id="owl-demo4" class="owl-carousel owl-theme owl-img-responsive">
+                        <div class="item" style="width:250px"><img class="img-fluid" src="/static/assets/img/examples/product1.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:150px"><img class="img-fluid" src="/static/assets/img/examples/product2.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:200px"><img class="img-fluid" src="/static/assets/img/examples/product3.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:125px"><img class="img-fluid" src="/static/assets/img/examples/product4.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:150px"><img class="img-fluid" src="/static/assets/img/examples/product5.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:175px"><img class="img-fluid" src="/static/assets/img/examples/product6.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:250px"><img class="img-fluid" src="/static/assets/img/examples/product7.jpg" alt="Owl Image"></div>
+                        <div class="item" style="width:200px"><img class="img-fluid" src="/static/assets/img/examples/product8.jpg" alt="Owl Image"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="/static/assets/js/setting-demo2.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#owl-demo').owlCarousel({
+            loop:true,
+            margin:10,
+            nav:true,
+            responsive:{
+                0:{
+                    items:1
+                },
+                600:{
+                    items:3
+                },
+                1000:{
+                    items:4
+                }
+            }
+        })
+
+        $("#owl-demo2").owlCarousel({
+
+            nav:true, // Show next and prev buttons
+            autoplaySpeed:300,
+            navSpeed:400,
+            items:1
+
+        });
+
+        $('#owl-demo3').owlCarousel({
+            center: true,
+            items:2,
+            loop:true,
+            margin:10,
+            responsive:{
+                600:{
+                    items:4
+                }
+            }
+        });
+
+        $('#owl-demo4').owlCarousel({
+            margin:10,
+            loop:false,
+            autoWidth:true,
+            items: 4
+        })
+    });
+</script>
+
+{% endblock javascripts %}

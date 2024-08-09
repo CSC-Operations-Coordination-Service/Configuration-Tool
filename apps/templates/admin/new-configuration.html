@@ -1,0 +1,152 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} New Configuration {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %} {% endblock stylesheets %}
+
+{% block content %}
+
+<!-- HTML page section -->
+<div class="page-inner">
+
+    <!-- Breadcrumb -->
+    <div class="page-header">
+        <h4 class="page-title">New Configuration</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="/">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Admin</a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">New Configuration</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main page content -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+
+                <!-- Card header -->
+                <div class="card-header">
+                    <h4 class="card-title">Create a new Configuration</h4>
+                </div>
+
+                <!-- Card body -->
+                <div class="card-body">
+                    <div class="form-group">
+
+                        <!-- Scenario type selection -->
+                        <label for="state">Configuration from</label>
+                        <select class="form-control col-md-3 mb-3" id="state" name="state" aria-label="Model From">
+                            <option selected value="from_scratch">From scratch</option>
+                            <option value="from_file">File</option>
+                        </select>
+
+                        <!-- Scenario from file -->
+                        <form action="/rest/import" method="POST" enctype="multipart/form-data" id="import_by_file" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div>
+                                        <label for="name">Configuration Name</label>
+                                        <input class="form-control" id="name" name="name" type="text" placeholder="Enter the Configuration name" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <input class="form-select w-100 mb-0" type="file" id="file" name="file" accept=".cu">
+                                    <input class="btn btn-primary float-right" id="submit" type="submit" value="Send">
+                                </div>
+                            </div>
+                        </form>
+
+                        <!-- Scenario created manually -->
+                        <form id="editor_body" >
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="config-name">Configuration Name</label>
+                                    <div class="input-group">
+                                        <input class="form-control" id="config-name" name="config-name" type="text" placeholder="Enter the Configuration name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="time-step">Time step [days]</label>
+                                    <div class="input-group">
+                                        <input class="form-control" id="time-step" type="text"  name="increaseTime" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="validity-start-date">Start date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fa fa-calendar"></i>
+                                        </span>
+                                        <input data-datepicker="" class="form-control" id="validity-start-date" type="text" placeholder="dd/mm/yyyy" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="validity-end-date">End date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fa fa-calendar"></i>
+                                        </span>
+                                        <input data-datepicker="" class="form-control" id="validity-end-date" type="text" placeholder="dd/mm/yyyy" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <label for="config-description">Description</label>
+                            <textarea class="form-control col-md-8" rows="5" id ="config-description" name="description"></textarea>
+
+                            <!-- Save button -->
+                            <div class="col-md-8 mt-3 ml-2">
+                                <button class="btn btn-primary float-right" type="button" onclick="manager.addConfiguration();">Save</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
+{% endblock content %}
+-->
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+    manager.init();
+    $('#validity-start-date').datetimepicker({
+        format: 'DD/MM/YYYY',
+    });
+    $('#validity-end-date').datetimepicker({
+        format: 'DD/MM/YYYY',
+    });
+    $('#state').on('change', function(e) {
+        if (this.value === "from_scratch") {
+            document.getElementById('import_by_file').style.display='none';
+            document.getElementById('editor_body').style.display='block';
+        } else {
+            document.getElementById('import_by_file').style.display='block';
+            document.getElementById('editor_body').style.display='none';
+        }
+    });
+</script>
+{% endblock javascripts %}

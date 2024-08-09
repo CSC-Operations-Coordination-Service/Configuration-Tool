@@ -1,0 +1,120 @@
+#docker volume create --name=postgres-db-volume
+#docker volume create --name=pgadmin-db-volume
+#docker volume create --name=mongo-db-volume
+version: "3.3"
+services:
+
+  postgres:
+    container_name: postgres
+    image: "postgres:15.2"
+    restart: always
+    environment:
+     - POSTGRES_USER=configuration_tool
+     - POSTGRES_PASSWORD=4sMUk7XCc8eSDhPCPfWPB2CMWBXc3SyT
+     - POSTGRES_DB=configuration_tool_db
+     - PGDATA=/data/pg
+    networks:
+      - configuration-tool-net
+    volumes:
+      - postgres-db-volume:/data
+    ports:
+      - 5432:5432
+    expose:
+      - "5432"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  pgadmin:
+    container_name: pgadmin
+    image: "dpage/pgadmin4:7.3"
+    restart: always
+    environment:
+     - PGADMIN_DEFAULT_EMAIL=admin@telespazio.com
+     - PGADMIN_DEFAULT_PASSWORD=6h318bCtCMgmysdbsA
+    ports:
+      - 5050:80
+    networks:
+      - configuration-tool-net
+    deploy:
+      mode: replicated
+      replicas: 1
+    volumes:
+      - pgadmin-db-volume:/var/lib/pgadmin
+
+  configuration-tool:
+    container_name: configuration-tool
+    image: "configuration-tool:TAG"
+    restart: always
+    environment:
+     - POSTGRES_HOST=postgres
+     - POSTGRES_DB_ENGINE=postgresql
+     - POSTGRES_PORT=5432
+     - POSTGRES_DB_NAME=configuration_tool_db
+     - POSTGRES_DB_USERNAME=configuration_tool
+     - POSTGRES_DB_PASSWORD=4sMUk7XCc8eSDhPCPfWPB2CMWBXc3SyT
+     - MONGO_HOST=mongo
+     - MONGO_PORT=27017
+     - MONGO_DB_NAME=configuration_tool_db
+     - MONGO_DB_USERNAME=configuration_tool
+     - MONGO_DB_PASSWORD=3sMUk6XCc9eSDhPCPfWPB2CMWBXc4SyZ
+    ports:
+      - 5005:5005
+    networks:
+      - configuration-tool-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  mongo:
+    container_name: mongo
+    image: mongo:7.0
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=configuration_tool
+      - MONGO_INITDB_ROOT_PASSWORD=3sMUk6XCc9eSDhPCPfWPB2CMWBXc4SyZ
+      - MONGO_INITDB_DATABASE=configuration_tool_db
+    volumes:
+      - mongo-db-volume:/data/db
+    networks:
+      - configuration-tool-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  mongo-express:
+    container_name: mongo-express
+    image: mongo-express:1.0.0-20-alpine3.18
+    restart: always
+    ports:
+      - 5051:8081
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_MONGODB_AUTH_DATABASE=admin
+      - ME_CONFIG_MONGODB_AUTH_USERNAME=configuration_tool
+      - ME_CONFIG_MONGODB_AUTH_PASSWORD=3sMUk6XCc9eSDhPCPfWPB2CMWBXc4SyZ
+      - ME_CONFIG_BASICAUTH_USERNAME=admin@telespazio.com
+      - ME_CONFIG_BASICAUTH_PASSWORD=6h318bCtCMgmysdbsA
+    networks:
+      - configuration-tool-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+volumes:
+  postgres-db-volume:
+    external: true
+  pgadmin-db-volume:
+    external: true
+  mongo-db-volume:
+    external: true
+
+networks:
+  configuration-tool-net:
+    #name: configuration-tool-net
+    driver: bridge
+

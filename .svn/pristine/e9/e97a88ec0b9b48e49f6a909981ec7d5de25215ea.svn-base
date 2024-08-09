@@ -1,0 +1,137 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Email Compose {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->  
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="page-inner page-inner-fill">
+    <div class="page-with-aside mail-wrapper">
+        <div class="page-aside bg-black">
+            <div class="aside-header">
+                <div class="title">Mail Service</div>
+                <div class="description">Service Description</div>
+                <a class="btn btn-primary toggle-email-nav" data-toggle="collapse" href="#email-nav" role="button" aria-expanded="false" aria-controls="email-nav">
+                    <span class="btn-label">
+                        <i class="icon-menu"></i>
+                    </span>
+                    Menu
+                </a>
+            </div>
+            <div class="aside-nav collapse" id="email-nav">
+                <ul class="nav">
+                    <li>
+                        <a href="#">
+                            <i class="flaticon-inbox"></i> Inbox
+                            <span class="badge badge-primary float-right">8</span>
+                        </a>
+                    </li>
+                    <li class="active">
+                        <a href="#">
+                            <i class="fa fa-envelope"></i> Sent Mail
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">             
+                            <i class="flaticon-exclamation"></i> Important
+                            <span class="badge badge-secondary float-right">4</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i class="flaticon-envelope-3"></i> Drafts
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i class="flaticon-price-tag"></i> Tags
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <i class="flaticon-interface-5"></i> Trash
+                        </a>
+                    </li>
+
+                </ul>
+
+                <span class="label">Labels</span>
+                <ul class="nav nav-pills nav-stacked">
+                    <li>
+                        <a href="#">
+                            <i class="flaticon-inbox"></i> Inbox
+                            <span class="badge badge-primary float-right">8</span>
+                        </a>
+                    </li>
+                    <li class="active">
+                        <a href="#">
+                            <i class="fa fa-envelope"></i> Sent Mail
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">             
+                            <i class="flaticon-exclamation"></i> Important
+                            <span class="badge badge-secondary float-right">4</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="aside-compose"><a href="#" class="btn btn-primary btn-block fw-mediumbold">Compose Email</a></div>
+            </div>
+        </div>
+        <div class="page-content mail-content bg-black2">
+            <div class="email-head d-lg-flex d-block">
+                <h3>
+                    <i class="flaticon-pen mr-1"></i>
+                    Compose new message
+                </h3>
+            </div>
+            <div class="email-compose-fields">
+                <form>
+                    <div class="form-group row">
+                        <label for="to" class="col-form-label col-md-1">To :</label>
+                        <div class="col-md-11">
+                            <input type="text" class="form-control" id="to" name="to">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="cc" class="col-form-label col-md-1">Cc :</label>
+                        <div class="col-md-11">
+                            <input type="text" class="form-control" id="cc" name="cc">
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label for="subject" class="col-form-label col-md-1">Subject :</label>
+                        <div class="col-md-11">
+                            <input type="text" class="form-control" id="subject" name="subject">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="email-editor">
+                <div id="editor"></div>
+                <div class="email-action">
+                    <button class="btn btn-primary">Send</button>
+                    <button class="btn btn-danger">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="/static/assets/js/setting-demo.js"></script>
+<script>
+    $('#editor').summernote({
+        fontNames: ['Arial', 'Arial Black', 'Comic Sans MS', 'Courier New'],
+        tabsize: 2,
+        height: 300
+    });
+</script>
+
+{% endblock javascripts %}

@@ -1,0 +1,33 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Fullscreen Maps {% endblock title %}
+
+<!-- Specific Page CSS goes HERE  -->  
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="content-full">
+    <div id="map-full" class="full-screen-maps"></div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA1On32WMJzaErjXZhvYcEvYDQ_5PvlMCw"></script>
+<script src="/static/assets/js/plugin/gmaps/gmaps.js"></script>
+
+<script>
+    $(document).ready(function(){
+        var mapFull = new GMaps({
+            div: '#map-full',
+            lat: -12.043333,
+            lng: -77.028333
+        });
+
+    })
+</script>
+
+{% endblock javascripts %}

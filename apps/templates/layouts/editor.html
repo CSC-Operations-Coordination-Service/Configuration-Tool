@@ -1,0 +1,93 @@
+<!--
+
+=========================================================
+* Volt Free - Bootstrap 5 Dashboard
+=========================================================
+
+* Product Page: https://themesberg.com/product/admin-dashboard/volt-bootstrap-5-dashboard
+* Copyright 2021 Themesberg (https://www.themesberg.com)
+* License (https://themesberg.com/licensing)
+
+* Designed and coded by https://themesberg.com
+
+=========================================================
+
+* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. Please contact us to request a removal.
+
+-->
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+
+<head>
+
+	<!-- Primary Meta Tags -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Title page -->
+    <title>
+        Configuration Tool
+    </title>
+
+    <!-- Further Meta Tags-->
+	<meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+	<link rel="icon" href="/static/assets/img/icon.ico" type="image/x-icon"/>
+
+	<!-- Fonts and icons -->
+	<script src="/static/assets/js/plugin/webfont/webfont.min.js"></script>
+	<script>
+		WebFont.load({
+			google: {"families":["Lato:300,400,700,900"]},
+			custom: {"families":["Flaticon", "Font Awesome 5 Solid", "Font Awesome 5 Regular", "Font Awesome 5 Brands", "simple-line-icons"],
+			          urls: ['/static/assets/css/fonts.min.css']},
+			active: function() {
+				sessionStorage.fonts = true;
+			}
+		});
+	</script>
+
+	<!-- Specific Configuration Tool scripts -->
+	<script src="/static/assets/lib/jsplumb.js"></script>
+
+	<!-- CSS Files -->
+	<link rel="stylesheet" href="/static/assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/static/assets/css/atlantis.css">
+	<link type="text/css" href="/static/assets/css/spinner.css" rel="stylesheet">
+
+	<!-- CSS Just for demo purpose, don't include it in your project -->
+	<link rel="stylesheet" href="/static/assets/css/demo.css">
+
+	<!-- Specific Page CSS goes HERE  -->
+	{% block stylesheets %}{% endblock stylesheets %}
+
+	<!--Init JSPlumb-->
+	<!--End JSPlumb-->
+
+</head>
+<body data-background-color="GhostWhite" style="height: 100%">
+
+    <div class="wrapper {% block sidebar_class %}{% endblock sidebar_class %}">
+
+        {% include 'includes/navigation.html' %}
+
+        {% include 'includes/sidebar.html' %}
+
+        <div class="main-panel">
+			<div class="container">
+
+				{% block content %}{% endblock content %}
+
+			</div>
+
+		</div>
+
+		{% include 'includes/custom-template.html' %}
+
+	</div>
+
+	{% include 'includes/scripts.html' %}
+    
+    <!-- Specific Page JS goes HERE  -->
+    {% block javascripts %} {% endblock javascripts %}
+      
+</body>
+</html>

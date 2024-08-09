@@ -1,0 +1,127 @@
+
+	<!-- Core JS Files   -->
+	<script src="/static/assets/js/core/jquery.3.2.1.min.js"></script>
+	<script src="/static/assets/js/core/popper.min.js"></script>
+	<script src="/static/assets/js/core/bootstrap.min.js"></script>
+
+	<!-- jQuery UI -->
+	<script src="/static/assets/js/plugin/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css" />
+
+	<!-- jQuery Scrollbar -->
+	<script src="/static/assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+
+	<!-- Moment JS -->
+	<script src="/static/assets/js/plugin/moment/moment.min.js"></script>
+
+	<!-- Chart JS -->
+	<script src="/static/assets/js/plugin/chart.js/chart.min.js"></script>
+	<script src="/static/assets/js/plugin/chartist/chartist.min.js"></script>
+	<script src="/static/assets/js/plugin/chartist-plugin-legend/chartist-plugin-legend.min.js"></script>
+
+	<!-- jQuery Sparkline -->
+	<script src="/static/assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+
+	<!-- Chart Circle -->
+	<script src="/static/assets/js/plugin/chart-circle/circles.min.js"></script>
+
+	<!-- Datatables -->
+	<script src="/static/assets/js/plugin/datatables/datatables.min.js"></script>
+
+	<!-- Bootstrap Notify -->
+	<script src="/static/assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+	<!-- Bootstrap Toggle -->
+	<script src="/static/assets/js/plugin/bootstrap-toggle/bootstrap-toggle.min.js"></script>
+
+	<!-- jQuery Vector Maps -->
+	<script src="/static/assets/js/plugin/jqvmap/jquery.vmap.min.js"></script>
+	<script src="/static/assets/js/plugin/jqvmap/maps/jquery.vmap.world.js"></script>
+
+	<!-- Google Maps Plugin -->
+	<script src="/static/assets/js/plugin/gmaps/gmaps.js"></script>
+
+	<!-- Dropzone -->
+	<script src="/static/assets/js/plugin/dropzone/dropzone.min.js"></script>
+
+	<!-- Fullcalendar -->
+	<script src="/static/assets/js/plugin/fullcalendar/fullcalendar.min.js"></script>
+
+	<!-- Vanilla Datepicker -->
+	<script src="/static/assets/js/plugin/vanilla-datepicker/datepicker.min.js"></script>
+
+	<!-- DateTimePicker -->
+	<script src="/static/assets/js/plugin/datepicker/bootstrap-datetimepicker.min.js"></script>
+
+	<!-- Bootstrap Tagsinput -->
+	<script src="/static/assets/js/plugin/bootstrap-tagsinput/bootstrap-tagsinput.min.js"></script>
+
+	<!-- Bootstrap Wizard -->
+	<script src="/static/assets/js/plugin/bootstrap-wizard/bootstrapwizard.js"></script>
+
+	<!-- jQuery Validation -->
+	<script src="/static/assets/js/plugin/jquery.validate/jquery.validate.min.js"></script>
+
+	<!-- Summernote -->
+	<script src="/static/assets/js/plugin/summernote/summernote-bs4.min.js"></script>
+
+	<!-- Select2 -->
+	<script src="/static/assets/js/plugin/select2/select2.full.min.js"></script>
+
+	<!-- Sweet Alert -->
+	<script src="/static/assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+
+	<!-- Owl Carousel -->
+	<script src="/static/assets/js/plugin/owl-carousel/owl.carousel.min.js"></script>
+
+	<!-- Magnific Popup -->
+	<script src="/static/assets/js/plugin/jquery.magnific-popup/jquery.magnific-popup.min.js"></script>
+
+	<!-- Sortable JS-->
+	<script src="/static/assets/js/plugin/sortable/sortable.min.js"></script>
+
+	<!-- Atlantis JS -->
+	<script src="/static/assets/js/theme/atlantis.min.js"></script>
+
+	<!-- Custom Date picker -->
+	<script src="/static/assets/js/plugin/vanilla-datepicker/datepicker.min.js"></script>
+
+	<!-- Date range picker -->
+	<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js" defer></script>
+	<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js" defer></script>
+	<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+	<!-- Mini Event Calendar -->
+	<script type="text/javascript" src="/static/assets/js/plugin/mini-event-calendar/mini-event-calendar.js"></script>
+	<link rel="stylesheet" type="text/css" href="/static/assets/js/plugin/mini-event-calendar/mini-event-calendar.css" />
+
+	<!-- Timeline plugin scripts -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/vis/4.8.2/vis.min.js'></script>
+
+	<!-- D3.js plugin-->
+	<script src='/static/assets/js/plugin/d3/d3.min.js'></script>
+
+	<!-- html2canvas plugin -->
+	<script src='/static/assets/js/plugin/html2canvas/html2canvas.min.js'></script>
+
+	<!-- Configuration Tool utilities -->
+	<script src="/static/assets/js/utils/utils.js"></script>
+
+	<!-- Set the permissions according to user's profile -->
+	<script src="/static/assets/js/profiles/profiles.js"></script>
+
+	<!-- Configuration Tool specific scripts for end users -->
+	<script src="/static/assets/js/home/interfaces-viewer.js"></script>
+	<script src="/static/assets/js/home/services-viewer.js"></script>
+	<script src="/static/assets/js/home/processors-viewer.js"></script>
+
+	<!-- Configuration Tool specific scripts for system administrator -->
+	<script src="/static/assets/js/admin/roles.js"></script>
+	<script src="/static/assets/js/admin/users.js"></script>
+	<script src="/static/assets/js/admin/configuration-manager.js"></script>
+	<script src="/static/assets/js/admin/interfaces-editor.js"></script>
+	<script src="/static/assets/js/admin/interfaces-versioning.js"></script>
+	<script src="/static/assets/js/admin/processors-editor.js"></script>
+	<script src="/static/assets/js/admin/services-editor.js"></script>
+
