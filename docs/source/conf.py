@@ -1,6 +1,6 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# For the full list of built-in configuration values, see the documentation:
+# For the full list of built-in configuration.py values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 # -- Project information -----------------------------------------------------
@@ -10,7 +10,7 @@ project = 'Coin-UP'
 copyright = '2023, Telespazio SPA'
 author = 'Telespazio SPA'
 
-# -- General configuration ---------------------------------------------------
+# -- General configuration.py ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = []

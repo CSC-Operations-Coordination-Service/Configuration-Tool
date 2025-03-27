@@ -62,6 +62,8 @@ services:
       - 5005:5005
     networks:
       - configuration-tool-net
+    volumes:
+      - /home/eouser/data/config:/apps/config
     deploy:
       mode: replicated
       replicas: 1

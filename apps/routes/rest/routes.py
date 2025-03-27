@@ -30,21 +30,18 @@ __version__ = "1.0.0"
 import json
 from datetime import datetime
 
+import pymongo
+from bson import ObjectId
 from flask import Response
 from flask import request
+from flask_login import current_user
 from flask_login import login_required
-from sqlalchemy import JSON, false
 
-from apps.routes.rest import blueprint
-from apps.models.nosql.Graph import Graph
+import apps.models.sql.Scenario as Scenario
 import apps.utils.auth_utils as auth_utils
 import apps.utils.db_utils as db_utils
-from flask_login import current_user
-import apps.models.sql.Fragment as Fragment
-import apps.models.sql.Scenario as Scenario
-import apps.models.sql.Users as Users
-import apps.models.sql.UserRole as UserRole
-import pymongo
+from apps.models.nosql.Graph import Graph
+from apps.routes.rest import blueprint
 
 
 @blueprint.route('/rest/api/configurations', methods=['GET'])
@@ -54,6 +51,7 @@ def get_configurations():
     :return:
     :rtype:
     """
+
     try:
 
         # Retrieve the available configurations from the Postgres DB, given the user id
@@ -61,24 +59,13 @@ def get_configurations():
 
         # Loop over each home, and retrieve from Mongo DB the information about last modifications and versioning
         for i, scenario in enumerate(scenarios):
-            id = scenario.id
 
             # Retrieve the graph
+            id = scenario.id
             graph = Graph()
             scen_graph = graph.find({'id': id})
             scen_graph = scen_graph[0]
             scen_graph['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
-
-            # Add description to Processors configuration
-            if scenario.name == 'Interfaces':
-                scenario.description = 'The CSC Ground Segment interfaces configuration'
-                Scenario.update_scenario(scenario.id, scenario.name, scenario.description, scenario.startDate,
-                                         scenario.endDate, scenario.increaseTime, scenario.locked)
-            if scenario.name == 'Processors':
-                scenario.description = ('The historical and the up-to-date configuration of the releases of the '
-                                        'Copernicus Sentinels processors')
-                Scenario.update_scenario(scenario.id, scenario.name, scenario.description, scenario.startDate,
-                                         scenario.endDate, scenario.increaseTime, scenario.locked)
 
             # Retrieve versioning history
             ver_graphs = graph.history_find({'id': id},
@@ -110,10 +97,15 @@ def save_configuration():
     :return:
     :rtype:
     """
+
+    # Check the profile authorizations
+    if not auth_utils.is_user_authorized(['admin']):
+        return Response(json.dumps("Not authorized", cls=db_utils.AlchemyEncoder), mimetype="application/json",
+                        status=401)
+
     try:
-        if not auth_utils.is_user_authorized(['admin']):
-            return Response(json.dumps("Not authorized", cls=db_utils.AlchemyEncoder), mimetype="application/json",
-                            status=401)
+
+        # Check if the payload body can be parsed; if so, save the provided configuration
         if request.data != b'':
 
             # Save the configuration
@@ -127,9 +119,193 @@ def save_configuration():
             # Create a configuration document
             # The ID of the document shall match the configuration UUID
             graph = Graph()
-            graph.insert_one({'id': uuid, 'graph':'{}'})
-
+            graph.insert_one({'id': uuid, 'graph': '{}'})
             return Response(json.dumps({'id': uuid}), mimetype="application/json", status=200)
+
+        # In the event that the payload body cannot be parsed, return a generic server error
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+@blueprint.route('/rest/api/configurations', methods=['DELETE'])
+@login_required
+def delete_configuration():
+    """
+    :return:
+    :rtype:
+    """
+    try:
+
+        # Check the profile authorizations
+        if not auth_utils.is_user_authorized(['admin']):
+            return Response(json.dumps("Not authorized", cls=db_utils.AlchemyEncoder), mimetype="application/json",
+                            status=401)
+
+        # Check if the payload body can be parsed; if so, save the provided configuration
+        if request.data != b'':
+
+            # Delete the configuration and the related versions
+            body = json.loads(request.data.decode('utf-8'))
+            config_id = body['configId']
+            graph = Graph()
+            graph.delete_many({'id': config_id})
+            Scenario.delete_scenario(config_id)
+            return Response(json.dumps({'status': '200'}), mimetype="application/json", status=200)
+
+        # In the event that the payload body cannot be parsed, return a generic server error
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+@blueprint.route('/rest/api/configurations/commit/<config_id>', methods=['GET'])
+@login_required
+def commit_by_config_id(config_id):
+    """
+    :return:
+    :rtype:
+    """
+
+    try:
+
+        # Retrieve the configuration versions
+        graph = Graph()
+        ver_graphs = graph.history_find({'id': config_id},
+                                        [('last_modify', pymongo.DESCENDING), ('tag', pymongo.ASCENDING),
+                                         ('n_ver', pymongo.ASCENDING)])
+
+        if ver_graphs is None:
+            return Response(json.dumps([], cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+        elif len(ver_graphs) == 0:
+            return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+        for i, version in enumerate(ver_graphs):
+            version['last_modify'] = version['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
+        return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+@blueprint.route('/rest/api/configurations/commit/<config_id>/<n_ver>', methods=['GET'])
+@login_required
+def commit_by_config_id_and_n_ver(config_id, n_ver):
+    """
+    :return:
+    :rtype:
+    """
+
+    try:
+
+        # Retrieve the specified configuration version
+        graph = Graph()
+        n_ver = int(n_ver)
+        ver_graphs = graph.history_find({'$and': [{'id': config_id}, {'n_ver': n_ver}]},
+                                        [('last_modify', pymongo.DESCENDING), ('n_ver', pymongo.ASCENDING)])
+
+        if ver_graphs is None:
+            return Response(json.dumps([], cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+        elif len(ver_graphs) == 0:
+            return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+        for i, version in enumerate(ver_graphs):
+            version['last_modify'] = version['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
+        return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+@blueprint.route('/rest/api/configurations/commit/<config_id>/<tag>', methods=['GET'])
+@login_required
+def commit_by_config_id_and_tag(config_id, tag):
+    """
+    :return:
+    :rtype:
+    """
+
+    try:
+
+        # Retrieve the specified tag
+        graph = Graph()
+        ver_graphs = graph.history_find({'$and': [{'id': config_id}, {'tag': tag.upper()}]},
+                                        [('last_modify', pymongo.DESCENDING), ('n_ver', pymongo.ASCENDING)])
+
+        if ver_graphs is None:
+            return Response(json.dumps([], cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+        elif len(ver_graphs) == 0:
+            return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+        for i, version in enumerate(ver_graphs):
+            version['last_modify'] = version['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
+        return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+@blueprint.route('/rest/api/configurations/commit', methods=['POST'])
+@login_required
+def commit_configuration():
+
+    # Check the profile authorizations
+    if not auth_utils.is_user_authorized(['admin']):
+        return Response(json.dumps("Not authorized", cls=db_utils.AlchemyEncoder), mimetype="application/json",
+                        status=401)
+
+    try:
+
+        # Check if the body payload can be parsed; if not return a generic server error
+        body = None
+        if request.data != b'':
+            body = json.loads(request.data.decode('utf-8'))
+        else:
+            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+        if body is None or len(body) == 0:
+            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+        # Commit the provided configuration
+        graph = Graph()
+        versioned_obj = graph.versioning(body['idScenario'], body['tag'], body.get('comment', ''))
+        if versioned_obj is None:
+            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+        return Response(json.dumps(versioned_obj, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+@blueprint.route('/rest/api/configurations/commit', methods=['DELETE'])
+@login_required
+def delete_commit_by_config_id_and_n_ver():
+    """
+    :return:
+    :rtype:
+    """
+
+    # Check the profile authorizations
+    if not auth_utils.is_user_authorized(['admin']):
+        return Response(json.dumps("Not authorized", cls=db_utils.AlchemyEncoder), mimetype="application/json",
+                        status=401)
+
+    try:
+
+        # Check if the payload body can be parsed; if so, delete the specified version
+        if request.data != b'':
+
+            # Delete the specified configuration version
+            body = json.loads(request.data.decode('utf-8'))
+            n_ver = int(body['revId'])
+            config_id = body['configId']
+            graph = Graph()
+            result = graph.history_delete_one({"$and": [{"id": config_id}, {"n_ver": n_ver}]})
+            return Response(json.dumps(result, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+
+        # In the event that the payload body cannot be parsed, return a generic server error
         return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
 
     except Exception as ex:

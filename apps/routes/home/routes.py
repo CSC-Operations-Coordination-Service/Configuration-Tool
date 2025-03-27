@@ -60,9 +60,9 @@ def route_template(template):
 
         # Detect the current page
         segment = get_segment(request)
-        admin_pages = ['users.html', 'roles.html', 'configuration-manager.html', 'interfaces-versioning.html',
+        admin_pages = ['users.html', 'roles.html', 'configuration-manager.html', 'configuration-versioning.html',
                        'new-configuration.html', 'interfaces-editor.html', 'processors-editor.html',
-                       'services-editor.html']
+                       'services-editor.html', 'dataflow-editor.html', 'documents-editor.html']
         if template in admin_pages:
             # Serve the file (if exists) from app/templates/admin/FILE.html
             return render_template("admin/" + template, segment=segment)

@@ -125,3 +125,25 @@ path, .jtk-endpoint {
 .jtk-overlay {
     background-color:transparent;
 }
+
+svg.matrixdiagram {
+    font-size: 11px;
+}
+
+svg.matrixdiagram .label {
+    text-anchor: end;
+}
+
+svg.matrixdiagram .column .label {
+    text-anchor: start;
+}
+
+svg.matrixdiagram .rect {
+    stroke: grey;
+    stroke-width: 1px;
+}
+
+svg.matrixdiagram .rect:hover {
+    stroke: #d62333;
+    stroke-width: 2px;
+}

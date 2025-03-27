@@ -45,7 +45,7 @@
     <div class="row">
         <div class="col-md-12">
 
-            <!-- <Services Online Help -->
+            <!-- Services Online Help -->
             <div class="card">
                 <div class="card-header" id="heading-description">
                     <h5 class="mb-0">
@@ -59,7 +59,7 @@
                 <div id="description" class="collapse hide" data-parent="#accordion"
                      aria-labelledby="heading-description">
                     <div class="card-body">
-                        This view shows the current and the past configuration of the services of the CSC Ground Segment.<br/>
+                        This view shows the current and the past configurations of the services of the CSC Ground Segment.<br/>
                         By clicking on the "<bold>Select version</bold>" button, a calendar will appear, allowing users to explore
                         any previous configuration saved in the past. Any time a new services configuration is released,
                         a blue dot is displayed in the corresponding date. By clicking on the date of interest, an overview
@@ -67,8 +67,11 @@
                         configuration is loaded.<br/>
                         Users can filter Services on the basis of the applicable mission, by choosing the mission
                         of interest in the "<bold>Select Mission</bold>" dropdown menu.<br/>
-                        By default, all services contributing to the CSC Ground Segment are displayed on a conceptual map.
-                        It is possible to focus on a specific service by clicking on the corresponding bubble in the diagram.<br/>
+                        By default, all services contributing to the CSC Ground Segment are displayed on a correlation
+                        matrix; connections are represented by the coloured boxes within the matrix. Services in the rows
+                        represent the interface sources, while those on the columns represent the interface targets.<br/>
+                        By hovering on a specific coloured box, a popup will be dispalyed, showing the information relevant
+                        to the selected interface.<br/>
                         Users can export a summary of the CSC Ground Segment services by clicking on the "<bold>Export
                         Services Configuration Document</bold>"
                     </div>
@@ -87,13 +90,13 @@
                             <div class="form-group float-left mr-auto ml-2">
                                 <div class="row" id="filter-toolbar" name="filter-toolbar">
                                     <button id="version-selector-btn" class="btn btn-primary animate-up-2 ml-1"
-                                            onclick="servicesViewer.openVersionSelectionPanel(null);">
+                                            data-toggle="modal" data-target="#version-selector-modal">
                                          <span class="btn-label">
                                             <i class="icon-calendar"></i>
                                             Select version
                                         </span>
                                     </button>
-                                    <select id="service-satellite-select" class="form-control ml-1" style="width: 150px"></select>
+                                    <select id="service-satellite-select" class="form-control ml-1" style="width: 250px"></select>
                                     <div class="form-check mt-1">
                                         <label class="form-check-label" for="display-future-interfaces">
                                             <input id="display-future-interfaces" class="form-check-input" type="checkbox">
@@ -120,7 +123,7 @@
                 </div>
 
                 <!-- Card body-->
-                <div class="card-body">
+                <div class="card-body" style="min-height: 1400px">
 
                     <!-- Configuration Tool Viewer Page HTML -->
                     <div class="row-model-editor">

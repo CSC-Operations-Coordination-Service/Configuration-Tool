@@ -37,6 +37,12 @@ class InterfacesEditor {
 
     init() {
 
+        // Init the version selector panel
+        initVersionSelector();
+
+        // Init the commit modal window - by default, disable tagging
+        initCommitModal();
+
         // Set custom JsPlumb properties
         this.initCanvas();
 
@@ -51,12 +57,6 @@ class InterfacesEditor {
 
         // Init the WYSIWYG Editors for references and notes
         this.initWYSIWYGEditors();
-
-        // Init the version selector panel
-        this.initVersionSelector();
-
-        // Init the commit modal window - by default, disable tagging
-        this.initCommitModal();
 
         // Load the specified Interface Configuration
         this.loadInterfaceConfiguration();
@@ -158,69 +158,12 @@ class InterfacesEditor {
         });
     }
 
-    initVersionSelector() {
-        var url = new URL(window.location);
-        var idScenario = url.searchParams.get('id');
-        ajaxCall('/rest/api/interfaces/commit/'+idScenario, 'GET', {}, this.successLoadCommits, this.errorLoadCommits);
-    }
-
-    initCommitModal() {
-        document.getElementById('tag-commit-checkbox').checked = false;
-        $('#tag-commit').attr("readonly", true);
-    }
-
-    successLoadCommits(response) {
-
-        // Auxiliary variable declaration
-        var url = new URL(window.location);
-        var idScenario = url.searchParams.get('id');
-        var versions = formatResponse(response);
-        var data = new Array();
-
-        // Check if the URL already has the version parameter, and if yes, eliminate it
-        if (url.searchParams.get('version')) {
-            url = url.toString().replace(/[\?&]version=[^&]+/g, '');
-        } else {
-            url = url.toString();
-        }
-
-        // Loop over the available versions, and append the corresponding
-        // entry in the versioning table
-        for (var i = 0 ; i < versions.length ; i++) {
-
-            // Save the interface row in a class member
-            var version = versions[i];
-
-            // Append the interface row
-            var ver = {};
-            ver['title'] = version['comment'];
-            ver['date'] = moment(version['last_modify'], 'DD/MM/yyyy, HH:mm:ss').toDate().getTime();
-            ver['link'] = url.toString() + '&version=' + version['n_ver'];
-            data.push(ver);
-        }
-
-        // Refresh the scenario datatable
-        $('#event-calendar').MEC({
-            calendar_link: url.toString().replace(/[\?&]version=[^&]+/g, ''),
-			events: data
-        });
-
-        // Customize the calendar
-        $("#eventTitle").text('');
-        $("#calLink").text('');
-    }
-
-    errorLoadCommits(response) {
-        console.error("Unable to load the configuration versions");
-        console.error(response);
-    }
-
     loadInterfaceConfiguration() {
         var url = new URL(window.location);
         var configId = url.searchParams.get('id');
         var version = url.searchParams.get('version');
         var ajaxCallURL = '/rest/api/interfaces/' + configId;
-        if (version) ajaxCallURL = '/rest/api/interfaces/commit/' + configId + '/' + version;
+        if (version) ajaxCallURL = '/rest/api/configurations/commit/' + configId + '/' + version;
         ajaxCall(ajaxCallURL, 'GET', {}, this.successLoadConfiguration, this.errorLoadConfiguration);
     }
 
@@ -713,14 +656,6 @@ class InterfacesEditor {
         editor.displayFocusedConfiguration(idElement);
     }
 
-    openVersionSelectionPanel() {
-        $('#version-selector-panel').fadeIn();
-    }
-
-    closeVersionSelectionPanel() {
-        $('#version-selector-panel').fadeOut();
-    }
-
     openEntityEditorPanel(entityId) {
 
         // Open the entity editor panel. If the "entity" parameter is defined, use
@@ -1195,82 +1130,6 @@ class InterfacesEditor {
     errorDeleteInterface(response) {
         console.error('Unable to delete the selected interface');
         console.error(response);
-    }
-
-    refreshTagField() {
-        $('#tag-commit').attr("readonly",
-            !document.getElementById('tag-commit-checkbox').checked);
-    }
-
-    commit() {
-        var url = new URL(window.location);
-        var idScenario = url.searchParams.get('id');
-        var comment = $('#commit-description').val();
-        var tag = $('#tag-commit').val();
-        var json = {};
-        json.idScenario = idScenario;
-        json.comment = comment;
-        json.tag = tag;
-        ajaxCall('/rest/api/interfaces/commit', 'POST', json, this.successCommit, this.errorCommit);
-        return;
-    }
-
-    successCommit(response) {
-
-        // Display a popup message
-        var content = {};
-        content.title = 'Commit result';
-        content.message = 'Commit successfully executed.';
-        content.icon = 'fa fa-bell';
-        content.url = '';
-        content.target = '_blank';
-
-        // Message visualization
-        var placementFrom = "bottom";
-        var placementAlign = "right";
-        var state = "success";
-        var style = "withicon";
-
-        $.notify(content,{
-            type: state,
-            placement: {
-                from: placementFrom,
-                align: placementAlign
-            },
-            time: 1000,
-            delay: 0,
-        });
-    }
-
-    errorCommit(response) {
-
-        // Log the failure of the commit in the browser console
-        console.error('Unable to commit the current configuration');
-        console.error(response);
-
-        // Display a popup message
-        var content = {};
-        content.title = 'Commit result';
-        content.message = 'Unable to commit the current configuration';
-        content.icon = 'fa fa-bell';
-        content.url = '';
-        content.target = '_blank';
-
-        // Message visualization
-        var placementFrom = "bottom";
-        var placementAlign = "right";
-        var state = "danger";
-        var style = "withicon";
-
-        $.notify(content,{
-            type: state,
-            placement: {
-                from: placementFrom,
-                align: placementAlign
-            },
-            time: 1000,
-            delay: 0,
-        });
     }
 
 }

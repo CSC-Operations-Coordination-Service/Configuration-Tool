@@ -82,32 +82,6 @@
                                         <input class="form-control" id="config-name" name="config-name" type="text" placeholder="Enter the Configuration name" required>
                                     </div>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="time-step">Time step [days]</label>
-                                    <div class="input-group">
-                                        <input class="form-control" id="time-step" type="text"  name="increaseTime" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label for="validity-start-date">Start date</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fa fa-calendar"></i>
-                                        </span>
-                                        <input data-datepicker="" class="form-control" id="validity-start-date" type="text" placeholder="dd/mm/yyyy" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="validity-end-date">End date</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fa fa-calendar"></i>
-                                        </span>
-                                        <input data-datepicker="" class="form-control" id="validity-end-date" type="text" placeholder="dd/mm/yyyy" required>
-                                    </div>
-                                </div>
                             </div>
                             <label for="config-description">Description</label>
                             <textarea class="form-control col-md-8" rows="5" id ="config-description" name="description"></textarea>
@@ -116,6 +90,7 @@
                             <div class="col-md-8 mt-3 ml-2">
                                 <button class="btn btn-primary float-right" type="button" onclick="manager.addConfiguration();">Save</button>
                             </div>
+
                         </form>
 
                     </div>

@@ -26,10 +26,10 @@ class ServicesEditor {
 
         this.types = ['Acquisition', 'EDRS', 'Production', 'LTA', 'ADGS', 'CDSE - Data Access', 'CDSE - Traceability',
                       'MPC', 'POD', 'MP', 'FOS', 'Monitoring', 'Reference System - Processor Publication',
-                      'Reference System - Sample Production'];
+                      'Reference System - Sample Production', 'Reprocessing'];
 
-        this.interfacePoints = ['PRIP', 'AIP', 'AUXIP', 'DDP', 'CADIP', 'PEDC/BEDC EDRS, EDIP', 'DDIP', 'MPCIP',
-                                'SFTP', 'CPODIP', 'MPIP', 'API', 'RSIP', 'FTP', 'Email', 'E2E', 'Not Applicable'];
+        this.interfacePoints = ['PRIP', 'AIP', 'AUXIP', 'DDP', 'CADIP', 'PEDC/BEDC EDRS, EDIP', 'DDIP', 'MPCIP', 'FTP',
+                                'SFTP', 'CPODIP', 'MPIP', 'API', 'RSIP', 'RPRIP', 'Email', 'E2E', 'Not Applicable'];
 
         this.interfaceStatus = ['Operational', 'Future'];
 
@@ -40,6 +40,12 @@ class ServicesEditor {
     }
 
     init() {
+
+        // Init the version selector panel
+        initVersionSelector();
+
+        // Init the commit modal window - by default, disable tagging
+        initCommitModal();
 
         // Init the Service Type selector
         this.initServiceTypesSelector();
@@ -70,10 +76,6 @@ class ServicesEditor {
 
     }
 
-    initExternalFlagSelector() {
-
-    }
-
     initServiceTypesSelector() {
 
         // Reset the dropdown menu and set options
@@ -95,6 +97,21 @@ class ServicesEditor {
                 value: ip,
                 text : ip
             }));
+        });
+    }
+
+    initWYSIWYGEditors() {
+        $('#service-address-wysiwyg-editor').summernote({
+            minHeight: 100
+        });
+        $('#operational-ipfs-wysiwyg-editor').summernote({
+            minHeight: 100
+        });
+        $('#references-wysiwyg-editor').summernote({
+            minHeight: 100
+        });
+        $('#whitelisted-clients-wysiwyg-editor').summernote({
+            minHeight: 100
         });
     }
 
@@ -137,13 +154,61 @@ class ServicesEditor {
         }
     }
 
-    initWYSIWYGEditors() {
-        $('#operational-ipfs-wysiwyg-editor').summernote({
-            minHeight: 100
+    initVersionSelector() {
+        var url = new URL(window.location);
+        var idScenario = url.searchParams.get('id');
+        ajaxCall('/rest/api/configurations/commit/'+idScenario, 'GET', {}, this.successLoadCommits, this.errorLoadCommits);
+    }
+
+    initCommitModal() {
+        document.getElementById('tag-commit-checkbox').checked = false;
+        $('#tag-commit').attr("readonly", true);
+    }
+
+    successLoadCommits(response) {
+
+        // Auxiliary variable declaration
+        var url = new URL(window.location);
+        var idScenario = url.searchParams.get('id');
+        var versions = formatResponse(response);
+        var data = new Array();
+
+        // Check if the URL already has the version parameter, and if yes, eliminate it
+        if (url.searchParams.get('version')) {
+            url = url.toString().replace(/[\?&]version=[^&]+/g, '');
+        } else {
+            url = url.toString();
+        }
+
+        // Loop over the available versions, and append the corresponding
+        // entry in the versioning table
+        for (var i = 0 ; i < versions.length ; i++) {
+
+            // Save the interface row in a class member
+            var version = versions[i];
+
+            // Append the interface row
+            var ver = {};
+            ver['title'] = version['comment'];
+            ver['date'] = moment(version['last_modify'], 'DD/MM/yyyy, HH:mm:ss').toDate().getTime();
+            ver['link'] = url.toString() + '&version=' + version['n_ver'];
+            data.push(ver);
+        }
+
+        // Refresh the scenario datatable
+        $('#event-calendar').MEC({
+            calendar_link: url.toString().replace(/[\?&]version=[^&]+/g, ''),
+			events: data
         });
-        $('#references-wysiwyg-editor').summernote({
-            minHeight: 100
-        });
+
+        // Customize the calendar
+        $("#eventTitle").text('');
+        $("#calLink").text('');
+    }
+
+    errorLoadCommits(response) {
+        console.error("Unable to load the configuration versions");
+        console.error(response);
     }
 
     cleanupServicesEditor() {
@@ -155,6 +220,7 @@ class ServicesEditor {
         $('#interface-point').val('');
         $('#cloud-provider').val('');
         $('#rolling-period').val('');
+        $('#service-address-wysiwyg-editor').summernote('code', '');
         $('#operational-ipfs-wysiwyg-editor').summernote('code', '');
         $('#references-wysiwyg-editor').summernote('code', '');
     }
@@ -256,17 +322,21 @@ class ServicesEditor {
 
     cleanupInterfacesEditor() {
         $('#interface-id').val('');
+        $('#interface-name').val('');
         $('#source-service-type').val('');
         $('#source-service-provider').val('');
         $('#target-service-type').val('');
         $('#target-service-provider').val('');
         $('#interface-status').val('');
+        $('#whitelisted-clients-wysiwyg-editor').summernote('code', '');
     }
 
     loadServices() {
         var url = new URL(window.location);
         var configId = url.searchParams.get('id');
+        var version = url.searchParams.get('version');
         var ajaxCallURL = '/rest/api/services/' + configId;
+        if (version) ajaxCallURL = '/rest/api/configurations/commit/' + configId + '/' + version;
         ajaxCall(ajaxCallURL, 'GET', {}, this.successLoadConfiguration, this.errorLoadConfiguration);
     }
 
@@ -291,8 +361,9 @@ class ServicesEditor {
             row.push(sr['provider']);
             row.push(sr['satellite_units']);
             row.push(sr['interface_point']);
-            row.push(sr['cloud_provider']);
             row.push(sr['rolling_period']);
+            row.push(sr['cloud_provider']);
+            row.push(sr['address']);
             row.push(sr['operational_ipfs']);
             row.push(sr['references']);
             data.push(row);
@@ -310,6 +381,7 @@ class ServicesEditor {
             var ifc = servicesEditor.interfaces[i];
             var row = new Array();
             row.push(ifc['id']);
+            row.push(ifc['name']);
 
             // Find the source / target services
             var source = servicesEditor.getService(ifc['source_service_id']);
@@ -320,6 +392,7 @@ class ServicesEditor {
             row.push(source['provider']);
             row.push(target['type']);
             row.push(target['provider']);
+            row.push(ifc['whitelisted_clients']);
             row.push(ifc['status']);
             data.push(row);
         }
@@ -364,8 +437,9 @@ class ServicesEditor {
         $("#external-service").prop("checked", service['external']);
         $('#satellite-units').val(service['satellite_units']);
         $('#interface-point').val(service['interface_point']);
-        $('#cloud-provider').val(service['cloud_provider']);
         $('#rolling-period').val(service['rolling_period']);
+        $('#cloud-provider').val(service['cloud_provider']);
+        $('#service-address-wysiwyg-editor').summernote('code', service['address']);
         $('#operational-ipfs-wysiwyg-editor').summernote('code', service['operational_ipfs']);
         $('#references-wysiwyg-editor').summernote('code', service['references']);
     }
@@ -393,8 +467,9 @@ class ServicesEditor {
         body['external'] = document.getElementById('external-service').checked;
         body['satellite_units'] = $('#satellite-units').val();
         body['interface_point'] = $('#interface-point').val();
-        body['cloud_provider'] = $('#cloud-provider').val();
         body['rolling_period'] = $('#rolling-period').val();
+        body['cloud_provider'] = $('#cloud-provider').val();
+        body['address'] = $('#service-address-wysiwyg-editor').summernote('code');
         body['operational_ipfs'] = $('#operational-ipfs-wysiwyg-editor').summernote('code');
         body['references'] = $('#references-wysiwyg-editor').summernote('code');
 
@@ -431,8 +506,9 @@ class ServicesEditor {
         body['external'] = document.getElementById('external-service').checked;
         body['satellite_units'] = $('#satellite-units').val();
         body['interface_point'] = $('#interface-point').val();
-        body['cloud_provider'] = $('#cloud-provider').val();
         body['rolling_period'] = $('#rolling-period').val();
+        body['cloud_provider'] = $('#cloud-provider').val();
+        body['address'] = $('#service-address-wysiwyg-editor').summernote('code');
         body['operational_ipfs'] = $('#operational-ipfs-wysiwyg-editor').summernote('code');
         body['references'] = $('#references-wysiwyg-editor').summernote('code');
 
@@ -463,7 +539,7 @@ class ServicesEditor {
         // Delete the selected service
         var body = {};
         body['config_id'] = configId;
-        body['service_id'] = procId;
+        body['service_id'] = serviceId;
 
         // Delete the processor release
         ajaxCall('/rest/api/services', 'DELETE', body, this.successDeleteService, this.errorDeleteService);
@@ -506,6 +582,7 @@ class ServicesEditor {
             var ifc = servicesEditor.interfaces[i];
             var row = new Array();
             row.push(ifc['id']);
+            row.push(ifc['name']);
 
             // Find the source / target services
             var source = servicesEditor.getService(ifc['source_service_id']);
@@ -516,6 +593,7 @@ class ServicesEditor {
             row.push(source['provider']);
             row.push(target['type']);
             row.push(target['provider']);
+            row.push(ifc['whitelisted_clients']);
             row.push(ifc['status']);
             data.push(row);
         }
@@ -577,6 +655,7 @@ class ServicesEditor {
 
         // Fill the service editor properties
         $('#interface-id').val(ifId);
+        $('#interface-name').val(iff['name']);
         $('#source-service-type').val(source['type']);
         $('#source-service-provider').find('option').remove().end();
         servicesEditor.services.forEach(service => {
@@ -599,6 +678,7 @@ class ServicesEditor {
             }
         });
         $('#target-service-provider').val(target['id']);
+        $('#whitelisted-clients-wysiwyg-editor').summernote('code', iff['whitelisted_clients']);
         $('#interface-status').val(iff['status']);
     }
 
@@ -624,10 +704,12 @@ class ServicesEditor {
         // Define the new service
         var body = {};
         body['config_id'] = configId;
+        body['name'] = $('#interface-name').val();
         body['source_service_id'] = $('#source-service-provider').val();
         body['target_service_id'] = $('#target-service-provider').val();
         body['satellite_units'] = source['satellite_units'].length > target['satellite_units'].length ?
                 target['satellite_units'] : source['satellite_units'];
+        body['whitelisted_clients'] = $('#whitelisted-clients-wysiwyg-editor').summernote('code');
         body['status'] = $('#interface-status').val();
 
 	    // Save the new interface
@@ -662,10 +744,12 @@ class ServicesEditor {
         var body = {};
         body['config_id'] = configId;
         body['id'] = $('#interface-id').val();
+        body['name'] = $('#interface-name').val();
         body['source_service_id'] = $('#source-service-provider').val();
         body['target_service_id'] = $('#target-service-provider').val();
         body['satellite_units'] = source['satellite_units'].length > target['satellite_units'].length ?
                 target['satellite_units'] : source['satellite_units'];
+        body['whitelisted_clients'] = $('#whitelisted-clients-wysiwyg-editor').summernote('code');
         body['status'] = $('#interface-status').val();
 
 	    // Save the new interface
@@ -714,7 +798,6 @@ class ServicesEditor {
         console.error('Unable to delete the specified interface');
         console.error(response);
     }
-
 }
 
 let servicesEditor = new ServicesEditor();

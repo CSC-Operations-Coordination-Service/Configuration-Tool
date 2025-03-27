@@ -30,9 +30,7 @@ __version__ = "1.0.0"
 import json
 import os
 import urllib
-import re
 
-import html2text
 import pymongo
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -434,118 +432,6 @@ def delete_interface():
         return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
 
 
-@blueprint.route('/rest/api/interfaces/commit/<config_id>', methods=['GET'])
-@login_required
-def commit_by_config_id(config_id):
-    """
-    :return:
-    :rtype:
-    """
-    try:
-
-        graph = Graph()
-        ver_graphs = graph.history_find({'id': config_id},
-                                        [('last_modify', pymongo.DESCENDING), ('tag', pymongo.ASCENDING),
-                                         ('n_ver', pymongo.ASCENDING)])
-
-        if ver_graphs is None:
-            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-        elif len(ver_graphs) == 0:
-            return Response(json.dumps({'error': '404'}), mimetype="application/json", status=404)
-
-        for i, version in enumerate(ver_graphs):
-            version['last_modify'] = version['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
-
-        return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
-
-    except Exception as ex:
-        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-
-@blueprint.route('/rest/api/interfaces/commit/<config_id>/<n_ver>', methods=['GET'])
-@login_required
-def commit_by_config_id_and_n_ver(config_id, n_ver):
-    """
-    :return:
-    :rtype:
-    """
-    try:
-
-        graph = Graph()
-        n_ver = int(n_ver)
-        ver_graphs = graph.history_find({'$and': [{'id': config_id}, {'n_ver': n_ver}]},
-                                        [('last_modify', pymongo.DESCENDING), ('n_ver', pymongo.ASCENDING)])
-
-        if ver_graphs is None:
-            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-        elif len(ver_graphs) == 0:
-            return Response(json.dumps({'error': '404'}), mimetype="application/json", status=404)
-
-        for i, version in enumerate(ver_graphs):
-            version['last_modify'] = version['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
-
-        return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
-
-    except Exception as ex:
-        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-
-@blueprint.route('/rest/api/interfaces/commit/<config_id>/<tag>', methods=['GET'])
-@login_required
-def commit_by_config_id_and_tag(config_id, tag):
-    """
-    :return:
-    :rtype:
-    """
-    try:
-
-        graph = Graph()
-        ver_graphs = graph.history_find({'$and': [{'id': config_id}, {'tag': tag.upper()}]},
-                                        [('last_modify', pymongo.DESCENDING), ('n_ver', pymongo.ASCENDING)])
-
-        if ver_graphs is None:
-            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-        elif len(ver_graphs) == 0:
-            return Response(json.dumps({'error': '404'}), mimetype="application/json", status=404)
-
-        for i, version in enumerate(ver_graphs):
-            version['last_modify'] = version['last_modify'].strftime("%d/%m/%Y, %H:%M:%S")
-
-        return Response(json.dumps(ver_graphs, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
-
-    except Exception as ex:
-        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-
-@blueprint.route('/rest/api/interfaces/commit', methods=['POST'])
-@login_required
-def commit_interfaces_configuration():
-    try:
-        if not auth_utils.is_user_authorized(['admin']):
-            return Response(json.dumps("Not authorized", cls=db_utils.AlchemyEncoder), mimetype="application/json",
-                            status=401)
-        body = None
-        if request.data != b'':
-            body = json.loads(request.data.decode('utf-8'))
-        else:
-            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-        if body is None or len(body) == 0:
-            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-        graph = Graph()
-
-        versioned_obj = graph.versioning(body['idScenario'], body['tag'], body.get('comment', ''))
-
-        if versioned_obj is None:
-            return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-        return Response(json.dumps(versioned_obj, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
-
-    except Exception as ex:
-        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
-
-
 @blueprint.route('/rest/api/interfaces/document/upload/<config_id>/<image_id>', methods=['POST'])
 @login_required
 def upload_image(config_id, image_id):
@@ -588,8 +474,7 @@ def download_interfaces_document(config_id):
 
     # Instantiate the report generator
     word_doc_generator = WordGenerator(
-        'apps/docs/interfaces/[ESA-EOPG-EOPGC-IF-6] ESA EO Operations Framework (EOF) - CSC - Ground Segment Master '
-        'ICD - template.docx')
+        'apps/config/templates/interfaces/[ESA-EOPG-EOPGC-IF-6] ESA EO Operations Framework (EOF) - CSC - Ground Segment Master ICD - template.docx')
 
     # Retrieve the configuration scenario
     scenario = Scenario.get_scenario(config_id)

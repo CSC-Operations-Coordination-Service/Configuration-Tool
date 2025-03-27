@@ -37,8 +37,25 @@ from flask_login import login_required
 
 import apps.utils.auth_utils as auth_utils
 import apps.utils.db_utils as db_utils
+from apps.config import Configuration
 from apps.models.nosql.Graph import Graph
 from apps.routes.rest.processors import blueprint
+
+
+@blueprint.route('/rest/api/baseline/processors-releases', methods=['GET'])
+def get_baseline_processors_releases():
+    try:
+        graph = Graph()
+        config_id = Configuration().get_object("configurations")['processors']
+        scen_graph = graph.find({'id': config_id})
+        scen_graph = scen_graph[0]
+        resp = Response(json.dumps(scen_graph, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
+    except Exception as ex:
+        resp = Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
 
 
 @blueprint.route('/rest/api/processors-releases/<config_id>', methods=['GET'])

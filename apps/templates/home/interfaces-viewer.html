@@ -45,7 +45,7 @@
     <div class="row">
         <div class="col-md-12">
 
-            <!-- <Interfaces Online Help -->
+            <!-- Interfaces Online Help -->
             <div class="card">
                 <div class="card-header" id="heading-description">
                     <h5 class="mb-0">
@@ -90,7 +90,7 @@
                             <div class="form-group float-left mr-auto ml-2">
                                 <div class="row" id="filter-toolbar" name="filter-toolbar">
                                     <button id="version-selector-btn" class="btn btn-primary animate-up-2 ml-1"
-                                            onclick="viewer.openVersionSelectionPanel(null);">
+                                            data-toggle="modal" data-target="#version-selector-modal">
                                          <span class="btn-label">
                                             <i class="icon-calendar"></i>
                                             Select version
@@ -207,63 +207,50 @@
                             </div>
                             <!-- [END] Right-side Interface Viewer -->
 
-                            <!-- [BEG] Right-side Version Selector -->
-                            <div class="card-fragment-editor card-body border-0 shadow mb-4" id="version-selector-panel" style="display: none">
-                                <h2 class="h2 mb-4" id="version-selector-lbl">Select version</h2>
-                                <div id="event-calendar" class="mini-cal"></div>
-                                <div style="text-align: center;">
-                                    <button id="close-version-select-btn" style="display: inline-block; margin-right: 10px; width:110px;" class="btn btn-primary mt-2 animate-up-2" type="button"
-                                            onclick="viewer.closeVersionSelectionPanel()">
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                            <!-- [END] Right-side Version Selector -->
-
                         </div>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
+            <!-- [BEG] Interface table section -->
+            <div class="row" id="interface-table-container" style="display: none">
+                <div class="col-md-12" style="background: white">
+                    <div class="card">
 
-    <!-- [BEG] Interface table section -->
-    <div class="row" id="interface-table-container" style="display: none">
-        <div class="col-md-12" style="background: white">
-            <div class="card">
+                        <!-- Card header -->
+                        <div class="card-header" style="background: white">
+                            <h4 class="card-title">Interface list</h4>
+                        </div>
 
-                <!-- Card header -->
-                <div class="card-header" style="background: white">
-                    <h4 class="card-title">Interface list</h4>
-                </div>
+                        <!-- Card body -->
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-sm" cellspacing="0" width="100%" style="width: 97%" id="interface-datatable">
+                                    <thead>
+                                        <tr>
+                                            <th>Interface Id</th>
+                                            <th>Interface Name</th>
+                                            <th>Satellite Units</th>
+                                            <th>Description</th>
+                                            <th>Service Source</th>
+                                            <th>Service Destination</th>
+                                            <th>Content</th>
+                                            <th>Protocol</th>
+                                            <th>References</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                <!-- Card body -->
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered table-sm" cellspacing="0" width="100%" style="width: 97%" id="interface-datatable">
-                            <thead>
-                                <tr>
-                                    <th>Interface Id</th>
-                                    <th>Interface Name</th>
-                                    <th>Satellite Units</th>
-                                    <th>Description</th>
-                                    <th>Service Source</th>
-                                    <th>Service Destination</th>
-                                    <th>Content</th>
-                                    <th>Protocol</th>
-                                    <th>References</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
                 </div>
-
             </div>
+            <!-- [END] Interface table section -->
+
         </div>
     </div>
-    <!-- [END] Interface table section -->
 
 </div>
 

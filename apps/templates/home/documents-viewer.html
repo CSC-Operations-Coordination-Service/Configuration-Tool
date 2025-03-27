@@ -1,0 +1,134 @@
+{% extends "layouts/editor.html" %}
+
+{% block title %} jsPlumb Toolkit - build Flowcharts, Diagrams and connectivity based applications fast {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:400,700" xmlns="http://www.w3.org/1999/html">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+    <link rel="stylesheet" href="/static/assets/css/editors.css">
+    <link rel="stylesheet" href="/static/assets/css/flowchart.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- Configuration Tool functional scripts -->
+    <script defer>
+        window.onload = function() {
+            documentsViewer.init();
+        };
+    </script>
+
+    <!-- HTML page section -->
+    <div class="page-inner">
+
+    <!-- Breadcrumb -->
+    <div class="page-header">
+        <h4 class="page-title">Configuration</h4>
+        <ul class="breadcrumbs">
+            <li class="nav-home">
+                <a href="/">
+                    <i class="flaticon-home"></i>
+                </a>
+            </li>
+            <li class="separator">
+                <i class="flaticon-right-arrow"></i>
+            </li>
+            <li class="nav-item">
+                <a href="#">Documentation</a>
+            </li>
+        </ul>
+    </div>
+
+        <!-- Main page content -->
+        <div class="row">
+            <div class="col-md-12">
+
+                <!-- Documentation Online Help -->
+                <div class="card">
+                    <div class="card-header" id="heading-description">
+                        <h5 class="mb-0">
+                            <a role="button" data-toggle="collapse" href="#description"
+                               aria-expanded="false" aria-controls="description"
+                               style="text-decoration: none">
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Description
+                            </a>
+                        </h5>
+                    </div>
+                    <div id="description" class="collapse hide" data-parent="#accordion"
+                         aria-labelledby="heading-description">
+                        <div class="card-body">
+                            This view shows the current documentation baseline, with the possibility of accessing also
+                            past versions of the displayed documents.<br/>
+                            Users can filter the documents by selecting the "<bold>Group</bold>" or the "<bold>
+                            Service</bold>" of interest. Moreover, Users can export the full list of the product types
+                            by clicking on the "<bold>Export Documents</bold>" button.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Editor -->
+                <div class="card">
+
+                    <!-- Card header -->
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+
+                            <!-- Configuration navigation buttons -->
+                            <div class="row col-md-12">
+                                <div class="form-group float-left mr-auto mr-2">
+                                    <div class="row" id="filter-toolbar" name="filter-toolbar">
+                                        <select class="form-control ml-1" id="docs-viewer-groups" style="width: 300px"></select>
+                                        <select class="form-control ml-1" id="docs-viewer-services" style="width: 300px"></select>
+                                    </div>
+                                </div>
+                                <div class="form-group float-right ml-auto mr-2">
+                                    <div class="row" id="action-toolbar" name="action-toolbar"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Card body-->
+                    <div class="card-body">
+
+                        <!-- Documents Viewer -->
+                        <div class="row-model-editor">
+
+                            <!-- [BEG] Documents table section -->
+                            <div class="row mt-3 col-md-12" id="dataflow-table-container">
+                            <div class="col-md-12" style="background: white">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-sm" cellspacing="0" width="100%" id="docs-viewer-datatable">
+                                        <thead>
+                                            <tr>
+                                                <th>Document Id</th>
+                                                <th style="width: 200px">Code</th>
+                                                <th>Title</th>
+                                                <th style="width: 100px">Current Version</th>
+                                                <th style="width: 100px">Previous Versions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- [END] Documents table section -->
+
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

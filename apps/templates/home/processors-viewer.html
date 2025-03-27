@@ -83,6 +83,9 @@
 
                     <!-- Processors search bar -->
                     <div class="row col-md-12">
+                        <div class="form-group float-left mr-auto ml-0">
+                            <select class="form-control ml-0" id="processors-viewer-missions" style="width: 300px"></select>
+                        </div>
                         <div class="flot-right ml-auto mr-0 mb-3">
                             <label>Search:
                                 <input aria-controls="basic-datatables-data-takes"
@@ -114,7 +117,7 @@
 
         // Filter processors releases
         $('#processors-text-filter').on('input', function(event) {
-            procViewer.filterEvents($(this).val());
+            procViewer.filterReleases($(this).val());
         });
 
 </script>

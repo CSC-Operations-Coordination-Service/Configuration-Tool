@@ -271,3 +271,137 @@ function removeComponentByName(name) {
         i--;
     }
 }
+
+function initVersionSelector() {
+    var url = new URL(window.location);
+    var idScenario = url.searchParams.get('id');
+    ajaxCall('/rest/api/configurations/commit/'+idScenario, 'GET', {}, successLoadCommits, errorLoadCommits);
+}
+
+function successLoadCommits(response) {
+
+    // Auxiliary variable declaration
+    var url = new URL(window.location);
+    var idScenario = url.searchParams.get('id');
+    var versions = formatResponse(response);
+    var data = new Array();
+
+    // Check if the URL already has the version parameter, and if yes, eliminate it
+    if (url.searchParams.get('version')) {
+        url = url.toString().replace(/[\?&]version=[^&]+/g, '');
+    } else {
+        url = url.toString();
+    }
+
+    // Loop over the available versions, and append the corresponding
+    // entry in the versioning table
+    for (var i = 0 ; i < versions.length ; i++) {
+
+        // Save the interface row in a class member
+        var version = versions[i];
+
+        // Append the interface row
+        var ver = {};
+        ver['title'] = version['comment'];
+        ver['date'] = moment(version['last_modify'], 'DD/MM/yyyy, HH:mm:ss').toDate().getTime();
+        ver['link'] = url.toString() + '&version=' + version['n_ver'];
+        data.push(ver);
+    }
+
+    // Refresh the scenario datatable
+    $('#event-calendar').MEC({
+        calendar_link: url.toString().replace(/[\?&]version=[^&]+/g, ''),
+        events: data
+    });
+
+    // Customize the calendar
+    $("#eventTitle").text('');
+    $("#calLink").text('');
+}
+
+function errorLoadCommits(response) {
+    console.error("Unable to load the configuration versions");
+    console.error(response);
+}
+
+function initCommitModal() {
+    document.getElementById('tag-commit-checkbox').checked = false;
+    $('#tag-commit').attr("readonly", true);
+}
+
+function refreshTagField() {
+    $('#tag-commit').attr("readonly",
+        !document.getElementById('tag-commit-checkbox').checked);
+}
+
+function commit() {
+    var url = new URL(window.location);
+    var idScenario = url.searchParams.get('id');
+    var comment = $('#commit-description').val();
+    var tag = $('#tag-commit').val();
+    var json = {};
+    json.idScenario = idScenario;
+    json.comment = comment;
+    json.tag = tag;
+    ajaxCall('/rest/api/configurations/commit', 'POST', json, successCommit, errorCommit);
+    return;
+}
+
+function successCommit(response) {
+
+    // Display a popup message
+    var content = {};
+    content.title = 'Commit result';
+    content.message = 'Commit successfully executed.';
+    content.icon = 'fa fa-bell';
+    content.url = '';
+    content.target = '_blank';
+
+    // Message visualization
+    var placementFrom = "bottom";
+    var placementAlign = "right";
+    var state = "success";
+    var style = "withicon";
+
+    $.notify(content,{
+        type: state,
+        placement: {
+            from: placementFrom,
+            align: placementAlign
+        },
+        time: 1000,
+        delay: 0,
+    });
+}
+
+function errorCommit(response) {
+
+    // Log the failure of the commit in the browser console
+    console.error('Unable to commit the current configuration');
+    console.error(response);
+
+    // Display a popup message
+    var content = {};
+    content.title = 'Commit result';
+    content.message = 'Unable to commit the current configuration';
+    content.icon = 'fa fa-bell';
+    content.url = '';
+    content.target = '_blank';
+
+    // Message visualization
+    var placementFrom = "bottom";
+    var placementAlign = "right";
+    var state = "danger";
+    var style = "withicon";
+
+    $.notify(content,{
+        type: state,
+        placement: {
+            from: placementFrom,
+            align: placementAlign
+        },
+        time: 1000,
+        delay: 0,
+    });
+}
+
