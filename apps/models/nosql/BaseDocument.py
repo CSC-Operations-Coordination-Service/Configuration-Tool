@@ -176,3 +176,7 @@ class BaseDocument:
         for x in cursor:
             list_obj.append(dict(x))
         return list_obj
+
+    def history_delete_one(self, query):
+        cursor = MongoConnector().get_connection()[self.MONGO_DB_NAME][self.COLLECTION_NAME_VERSION_CONTROL].delete_one(query)
+        return cursor

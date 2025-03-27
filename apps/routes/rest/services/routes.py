@@ -30,12 +30,11 @@ __version__ = "1.0.0"
 import json
 
 import docx
-import html2text
 import pymongo
-from docx.oxml.ns import qn
 from docx.oxml import parse_xml, OxmlElement
 from docx.oxml.ns import nsdecls
-from docx.shared import Pt, Inches
+from docx.oxml.ns import qn
+from docx.shared import Pt, Cm, Inches
 from flask import Response, send_file
 from flask import request
 from flask_login import login_required
@@ -56,11 +55,20 @@ def get_services(config_id):
         scen_graph = graph.find({'id': config_id})
         scen_graph = scen_graph[0]
 
-        # Add the external field in the model
+        # Add possible missing fields in the model
         json_data = json.loads(scen_graph['graph'])
-        for index, service in enumerate(json_data['services']):
-            if 'external' not in service:
-                service['external'] = False
+        # for index, service in enumerate(json_data['services']):
+        #     if 'address' not in service:
+        #         service['address'] = ''
+        #     if 'ip_address' in service:
+        #         del service['ip_address']
+        #     if 'whitelisted_clients' in service:
+        #         del service['whitelisted_clients']
+        # for index, interface in enumerate(json_data['interfaces']):
+        #     if 'name' not in interface:
+        #         interface['name'] = ''
+        #     if 'whitelisted_clients' not in interface:
+        #         interface['whitelisted_clients'] = ''
         updated_graph_string = json.dumps(json_data)
         scen_graph['graph'] = updated_graph_string
         result = graph.update_one({'id': config_id}, scen_graph)
@@ -106,8 +114,9 @@ def add_service():
             'external': body['external'],
             'satellite_units': body['satellite_units'],
             'interface_point': body['interface_point'],
-            'cloud_provider': body['cloud_provider'],
             'rolling_period': body['rolling_period'],
+            'cloud_provider': body['cloud_provider'],
+            'address': body['address'],
             'operational_ipfs': body['operational_ipfs'],
             'references': body['references']
         })
@@ -158,8 +167,9 @@ def update_service():
                 service['external'] = body['external']
                 service['satellite_units'] = body['satellite_units']
                 service['interface_point'] = body['interface_point']
-                service['cloud_provider'] = body['cloud_provider']
                 service['rolling_period'] = body['rolling_period']
+                service['cloud_provider'] = body['cloud_provider']
+                service['address'] = body['address']
                 service['operational_ipfs'] = body['operational_ipfs']
                 service['references'] = body['references']
 
@@ -250,9 +260,11 @@ def add_service_interface():
 
         json_data['interfaces'].append({
             'id': db_utils.generate_uuid(),
+            'name': body['name'],
             'source_service_id': body['source_service_id'],
             'target_service_id': body['target_service_id'],
             'satellite_units': body['satellite_units'],
+            'whitelisted_clients': body['whitelisted_clients'],
             'status': body['status']
         })
 
@@ -297,9 +309,11 @@ def update_service_interface():
 
         for index, interface in enumerate(json_data['interfaces']):
             if interface['id'] == body['id']:
+                interface['name'] = body['name']
                 interface['source_service_id'] = body['source_service_id']
                 interface['target_service_id'] = body['target_service_id']
                 interface['satellite_units'] = body['satellite_units']
+                interface['whitelisted_clients'] = body['whitelisted_clients']
                 interface['status'] = body['status']
 
         updated_graph_string = json.dumps(json_data)
@@ -478,7 +492,7 @@ def download_services_document(config_id):
     """
 
     # Instantiate the report generator
-    word_doc_generator = WordGenerator('apps/docs/services/CSC_ESA_Operational_Configuration - template.docx')
+    word_doc_generator = WordGenerator('apps/config/templates/services/CSC_ESA_Operational_Configuration - template.docx')
 
     # Retrieve the configuration scenario
     scenario = Scenario.get_scenario(config_id)
@@ -578,6 +592,7 @@ def dump_interfaces_matrix(word_doc_generator, satellite, services, interfaces):
     table_name = satellite + ' interface matrix'
     table = word_doc_generator.add_table(table_name, len(filtered_services) + 1, len(filtered_services) + 1, par)
     table.style = "Table Grid"
+    table.autofit = True
     table.allow_autofit = True
 
     # Set the font size and alignment in whole table
@@ -588,31 +603,33 @@ def dump_interfaces_matrix(word_doc_generator, satellite, services, interfaces):
             for paragraph in paragraphs:
                 paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
                 for run in paragraph.runs:
-                    run.font.size = Pt(9)
+                    run.font.size = Pt(8)
 
     # Add from / to services labels
     for i, service in enumerate(filtered_services):
 
-        # Horizontal row with labels
+        # Customize the Horizontal row with labels
         word_doc_generator.add_text_to_cell_table(table_name, 0, i + 1,
                                                   service['type'][:3] + ' - ' + service['provider'])
+        word_doc_generator.set_vertical_cell_direction(table.rows[0].cells[i + 1], 'btLr')
+
         cell = table.rows[0].cells[i + 1]
         for paragraph in cell.paragraphs:
             for run in paragraph.runs:
                 run.font.bold = True
-                run.font.size = Pt(9)
+                run.font.size = Pt(8)
             if service['external']:
                 shading_elm = parse_xml(r'<w:shd {} w:fill="EE6B6E"/>'.format(nsdecls('w')))
                 cell._tc.get_or_add_tcPr().append(shading_elm)
 
-        # Vertical column with labels
+        # Customize Vertical column with labels
         word_doc_generator.add_text_to_cell_table(table_name, i + 1, 0,
                                                   service['type'][:3] + ' - ' + service['provider'])
         cell = table.rows[i + 1].cells[0]
         for paragraph in cell.paragraphs:
             for run in paragraph.runs:
                 run.font.bold = True
-                run.font.size = Pt(9)
+                run.font.size = Pt(8)
         if service['external']:
             shading_elm = parse_xml(r'<w:shd {} w:fill="EE6B6E"/>'.format(nsdecls('w')))
             cell._tc.get_or_add_tcPr().append(shading_elm)
@@ -627,7 +644,7 @@ def dump_interfaces_matrix(word_doc_generator, satellite, services, interfaces):
                     cell = table.rows[i + 1].cells[j + 1]
                     for paragraph in cell.paragraphs:
                         for run in paragraph.runs:
-                            run.font.size = Pt(9)
+                            run.font.size = Pt(8)
                     word_doc_generator.add_text_to_cell_table(table_name, i + 1, j + 1, val)
                     shading_elm = parse_xml(r'<w:shd {} w:fill="ABF7B1"/>'.format(nsdecls('w'))) \
                         if iff['status'] == 'Operational' \
