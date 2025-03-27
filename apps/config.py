@@ -4,7 +4,7 @@
 The Configuration Tool is a software program produced for the European Space
 Agency.
 
-The purpose of this tool is to keep under configuration control the changes
+The purpose of this tool is to keep under configuration.py control the changes
 in the Ground Segment components of the Copernicus Programme, in the
 framework of the Coordination Desk Programme, managed by Telespazio S.p.A.
 
@@ -27,24 +27,21 @@ __license__ = "GPLv3"
 __status__ = "Production"
 __version__ = "1.0.0"
 
+import json
 import os
+import threading
+
 from apps.connector.MongoConnector import MongoConnector
 
 
-class Config(object):
+class Configuration:
+
     SESSION_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_DURATION = 3600
 
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
     # Set up the App SECRET_KEY
-    # SECRET_KEY = config('SECRET_KEY'  , default='S#perS3crEt_007')
     SECRET_KEY = os.getenv('SECRET_KEY', 'S#perS3crEt_007')
-
-    # This will create a file in <app> FOLDER
-    # SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')
-    # SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # PostgreSQL database
     POSTGRES_DB_ENGINE = os.getenv('POSTGRES_DB_ENGINE', 'postgresql')
@@ -55,12 +52,12 @@ class Config(object):
     POSTGRES_DB_PASSWORD = os.getenv('POSTGRES_DB_PASSWORD', '4sMUk7XCc8eSDhPCPfWPB2CMWBXc3SyT')
 
     SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
-        os.getenv('DB_ENGINE'   , POSTGRES_DB_ENGINE),
-        os.getenv('DB_USERNAME' , POSTGRES_DB_USERNAME),
-        os.getenv('DB_PASS'     , POSTGRES_DB_PASSWORD),
-        os.getenv('DB_HOST'     , POSTGRES_HOST),
-        os.getenv('DB_PORT'     , POSTGRES_PORT),
-        os.getenv('DB_NAME'     , POSTGRES_DB_NAME)
+        os.getenv('DB_ENGINE', POSTGRES_DB_ENGINE),
+        os.getenv('DB_USERNAME', POSTGRES_DB_USERNAME),
+        os.getenv('DB_PASS', POSTGRES_DB_PASSWORD),
+        os.getenv('DB_HOST', POSTGRES_HOST),
+        os.getenv('DB_PORT', POSTGRES_PORT),
+        os.getenv('DB_NAME', POSTGRES_DB_NAME)
     )
 
     # MongoDB database
@@ -80,10 +77,29 @@ class Config(object):
         collection.insert_one(document)
 
     # Assets Management
-    ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')    
+    ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
+
+    # Lock access to the Configuration instance
+    _lock = threading.Lock()
+    __magazine = {}
+
+    def __init__(self):
+        self.read_config_file('config.json')
+
+    def read_config_file(self, config_filename):
+        with open('apps/config/' + config_filename, 'r') as f:
+            config = json.load(f)['config']
+            for key in config.keys():
+                self.store_object(key=key, value=config[key])
+
+    def store_object(self, key, value):
+        self.__magazine[key]=value
+
+    def get_object(self, key):
+        return self.__magazine[key]
 
 
-class ProductionConfig(Config):
+class ProductionConfig(Configuration):
     DEBUG = False
 
     # Security
@@ -100,12 +116,12 @@ class ProductionConfig(Config):
     POSTGRES_DB_PASSWORD = os.getenv('POSTGRES_DB_PASSWORD', '4sMUk7XCc8eSDhPCPfWPB2CMWBXc3SyT')
 
     SQLALCHEMY_DATABASE_URI = '{}://{}:{}@{}:{}/{}'.format(
-        os.getenv('DB_ENGINE'   , POSTGRES_DB_ENGINE),
-        os.getenv('DB_USERNAME' , POSTGRES_DB_USERNAME),
-        os.getenv('DB_PASS'     , POSTGRES_DB_PASSWORD),
-        os.getenv('DB_HOST'     , POSTGRES_HOST),
-        os.getenv('DB_PORT'     , POSTGRES_PORT),
-        os.getenv('DB_NAME'     , POSTGRES_DB_NAME)
+        os.getenv('DB_ENGINE', POSTGRES_DB_ENGINE),
+        os.getenv('DB_USERNAME', POSTGRES_DB_USERNAME),
+        os.getenv('DB_PASS', POSTGRES_DB_PASSWORD),
+        os.getenv('DB_HOST', POSTGRES_HOST),
+        os.getenv('DB_PORT', POSTGRES_PORT),
+        os.getenv('DB_NAME', POSTGRES_DB_NAME)
     )
 
     # MongoDB database
@@ -122,12 +138,12 @@ class ProductionConfig(Config):
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
 
-class DebugConfig(Config):
+class DebugConfig(Configuration):
     DEBUG = True
 
 
 # Load all possible configurations
 config_dict = {
     'Production': ProductionConfig,
-    'Debug'     : DebugConfig
+    'Debug': DebugConfig
 }

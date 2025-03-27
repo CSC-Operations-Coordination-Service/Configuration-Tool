@@ -27,19 +27,18 @@ __license__ = "GPLv3"
 __status__ = "Production"
 __version__ = "1.0.0"
 
-import docx
-from htmldocx import HtmlToDocx
-from docx.opc.constants import RELATIONSHIP_TYPE as RT
-from docx import Document
-from docx.enum.dml import MSO_THEME_COLOR_INDEX
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from docx.enum.section import WD_ORIENTATION
-from docx.oxml import OxmlElement
-from docx.shared import Inches, Pt
-
 import tempfile
 
+import docx
+from docx import Document
+from docx.enum.section import WD_ORIENTATION
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Inches
+from docx.table import _Cell
 from docx.text.paragraph import Paragraph
+from htmldocx import HtmlToDocx
 
 from apps.utils import file_utils
 
@@ -212,10 +211,6 @@ class WordGenerator:
         cell = self.__map[table_name].cell(row, col)
         parser = HtmlToDocx()
         parser.add_html_to_cell(text, cell)
-        for paragraph in cell.paragraphs:
-            for run in paragraph.runs:
-                run.font.size = Pt(9)
-                run.font.name = 'Calibri'
         return cell
 
     def set_horizontal_layout(self):
@@ -237,6 +232,15 @@ class WordGenerator:
         section.page_width = width
         section.page_height = height
 
+    def set_vertical_cell_direction(self, cell: _Cell, direction: str):
+        # direction: tbRl -- top to bottom, btLr -- bottom to top
+        assert direction in ("tbRl", "btLr")
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+        textDirection = OxmlElement('w:textDirection')
+        textDirection.set(qn('w:val'), direction)  # btLr tbRl
+        tcPr.append(textDirection)
+
     def save(self, name):
         """
         :param name:
@@ -245,6 +249,5 @@ class WordGenerator:
         :rtype:
         """
         path = tempfile.gettempdir()
-        from apps.utils import auth_utils as utils
         self.__document.save(path + '/' + name + ' - ' + file_utils.get_date_for_file() + '.docx')
         return path + '/' + name + ' - ' + file_utils.get_date_for_file() + '.docx'

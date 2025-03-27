@@ -25,7 +25,7 @@ class ServicesViewer {
     constructor() {
 
         // The set of satellites
-        this.satellites = ['S1A', 'S2A', 'S2B', 'S3A', 'S3B', 'S5P'];
+        this.satellites = ['S1A', 'S1B', 'S1C', 'S2A', 'S2B', 'S2C', 'S3A', 'S3B', 'S5P'];
 
         // Define different colors identifier on the basis of the service type
         this.colorsMap = {'Acquisition': 1, 'EDRS': 2, 'Production': 3, 'LTA': 4, 'ADGS': 5,
@@ -48,6 +48,9 @@ class ServicesViewer {
     }
 
     init() {
+
+        // Init the version selector panel
+        initVersionSelector();
 
         // Init the WYSISWYG Editors
         this.initWYSIWYGEditors();
@@ -89,10 +92,18 @@ class ServicesViewer {
 
         // Reset satellite select options
         $('#service-satellite-select').find('option').remove().end();
+
+        // Append the empty selection option as the first option
+        $('#service-satellite-select').append($('<option>', {
+            value: "",
+            text : "Select a satellite unit..."
+        }));
+
+        // Set the satellite units
         servicesViewer.satellites.forEach(sat => {
             $('#service-satellite-select').append($('<option>', {
-                value: sat,
-                text : sat
+                value : sat,
+                text  : sat
             }));
         });
 
@@ -194,38 +205,62 @@ class ServicesViewer {
 
     displayServicesDiagram() {
 
-        // Reset the SVG container.
-        var svg = d3.select("svg");
-        svg.selectAll("*").remove();
-
         // Auxiliary variable declaration
         var data = {nodes: servicesViewer.services, links: servicesViewer.interfaces};
 
         // Select connections and nodes (entities) on the basis of the selected satellite
         var url = new URL(window.location);
-        servicesViewer.selectedSatellite = url.searchParams.get('selectedSat') != null ?
-            url.searchParams.get('selectedSat') : 'S1A';
+        var selectedSat = url.searchParams.get('selectedSat');
+        if (selectedSat == null) {
+            servicesViewer.selectedSatellite = null;
+        } else {
+            servicesViewer.selectedSatellite = url.searchParams.get('selectedSat');
+        }
 
         // Retrieve the future interfaces checkbox value
         var displayFutureIF = document.getElementById('display-future-interfaces').checked;
 
         // Use D3.js to draw the services diagram
         // Specify the dimensions of the chart.
-        const width = 800;
-        const height = 800;
-        svg.attr("width", width);
-        svg.attr("height", height);
-        svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
-        svg.attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+        const margin = {
+            top: 300,
+            right: 0,
+            bottom: 0,
+            left: 300
+        };
+        const width = 720;
+        const height = 720;
+
+        // Reset the SVG container
+        var svgDOM = d3.select("svg");
+        svgDOM.selectAll("*").remove();
+        svgDOM.attr('class','matrixdiagram');
+        svgDOM.attr("width", width + margin.left + margin.right);
+        svgDOM.attr("height", height + margin.top + margin.bottom);
+        var svg = svgDOM.append('g');
+        svg.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
         // Specify the color scale
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
+        const color = d3.scaleOrdinal(d3.schemeCategory10).domain(d3.range(13));
 
-        // Filter services and nodes on the basis of the selected satellite
-        data.nodes = data.nodes.filter(function(node) {
-            return (node['satellite_units'].toUpperCase().includes(servicesViewer.selectedSatellite.toUpperCase())
-                    || node['satellite_units'].toUpperCase().includes(servicesViewer.selectedSatellite.toUpperCase().substring(0,2)));
-        });
+        // Filter services nodes on the basis of the selected satellite
+        if (servicesViewer.selectedSatellite) {
+            data.nodes = data.nodes.filter(function(node) {
+                return (node['satellite_units'].toUpperCase().includes(servicesViewer.selectedSatellite.toUpperCase())
+                        || node['satellite_units'].toUpperCase().includes(servicesViewer.selectedSatellite.toUpperCase().substring(0,2)));
+            });
+            data.nodes = data.nodes.filter(function(node) {
+                let found = false;
+                for (var link of data.links) {
+                    if (node['id'] === link['source'] || node['id'] === link['target'] ) {
+                        found = true;
+                    }
+                }
+                return found;
+            });
+        }
+
+        // Filter interfaces on the basis of the selected nodes
         data.links = data.links.filter(function(link) {
             var hasSource = false, hasTarget = false;
             for (const node of data.nodes) {
@@ -234,101 +269,133 @@ class ServicesViewer {
             }
             return (hasSource && hasTarget && (link['status'] === 'Operational' || displayFutureIF));
         });
-        data.nodes = data.nodes.filter(function(node) {
-            let found = false;
-            for (var link of data.links) {
-                if (node['id'] === link['source'] || node['id'] === link['target'] ) {
-                    found = true;
-                }
-            }
-            return found;
-        });
 
         // The force simulation mutates links and nodes, so create a copy
         // so that re-evaluating this cell produces the same result.
         const links = data.links.map(d => ({...d}));
         const nodes = data.nodes.map(d => ({...d}));
 
-        // Create a simulation with several forces.
-        const simulation = d3.forceSimulation(nodes)
-          .force("link", d3.forceLink(links).id(d => d.id).strength(0.01))
-          .force("charge", d3.forceManyBody().strength(-30))
-          .force("center", d3.forceCenter(-width / 5, -height / 8))
-          .on("tick", ticked);
+        // Sort nodes
+        nodes.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
 
-        // Add a line for each link, and a circle for each node.
-        const link = svg.append("g")
-          .selectAll()
-          .data(links)
-          .join("line")
-          .attr("stroke", d => d.status === "Operational" ? "#35e75f" : "#0000ff")
-          .attr("stroke-opacity", 0.8)
-          .attr("stroke-width", d => Math.sqrt(d.value));
+        // After filtering and sorting, set the proper index to every node
+        for (let i = 0; i < nodes.length; ++i) {
+            nodes[i].index = i;
+        }
 
-        const node = svg.append("g")
-            .selectAll(".node")
-            .data(nodes)
-            .join("g")
-            .attr('class', 'node');
+        // After filtering, update the links with the indexes of the relevant source / target nodes
+        for (let i = 0; i < links.length; ++i) {
+            for (let j = 0; j < nodes.length; ++j) {
+                if (links[i].source_service_id === nodes[j].id) {
+                    links[i].source_service_name = nodes[j].name;
+                    links[i].source_service_index = nodes[j].index;
+                }
+                if (links[i].target_service_id === nodes[j].id) {
+                    links[i].target_service_name = nodes[j].name;
+                    links[i].target_service_index = nodes[j].index;
+                }
+            }
+        }
 
-        node.append('circle')
-            .attr("r", 15)
-            .attr("fill", d => color(d.type));
-
-        node.append("text")
-            .text(d => d.name)
-            .style('fill', '#4e555c')
-            .style('font-size', '12px')
-            .attr('x', 6)
-            .attr('y', 3);
-
-        node.on("click", function(node) {
-            servicesViewer.openServiceViewerPanel(node.target.__data__);
+        // New part for matrix diagram
+        var graph = {'links': links, 'nodes': nodes};
+        var x = d3.scaleBand().rangeRound([0, width]).paddingInner(0.1).align(0);
+        x.domain(d3.range(graph.nodes.length));
+        var matrix = graph.nodes.map(function (outer, i) {
+            outer.index = i;
+            return graph.nodes.map(function (inner, j) {
+                return {i: i, j: j};
+            });
+        });
+        graph.links.forEach(function (l) {
+            matrix[l.source_service_index][l.target_service_index].link = l;
         });
 
-        // Add a drag behavior
-        node.call(d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
+        // Build rows and columns
+        var row = svg.selectAll('g.row')
+            .data(matrix)
+            .enter().append('g')
+            .attr('class', 'row')
+            .attr('transform', function (d, i) { return 'translate(0,' + x(i) + ')'; })
+            .each(makeRow);
+        row.append('text')
+            .attr('class', 'label')
+            .attr('x', -4)
+            .attr('y', x.bandwidth() / 2)
+            .attr('dy', '0.32em')
+            .text(function (d, i) { return graph.nodes[i].name; });
 
-        // Set the position attributes of links and nodes each time the simulation ticks.
-        function ticked() {
-            link
-                .attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+        var column = svg.selectAll('g.column')
+            .data(matrix)
+            .enter().append('g')
+            .attr('class', 'column')
+            .attr('transform', function(d, i) { return 'translate(' + x(i) + ', 0)rotate(-90)'; })
+            .append('text')
+            .attr('class', 'label')
+            .attr('x', 4)
+            .attr('y', x.bandwidth() / 2)
+            .attr('dy', '0.32em')
+            .text(function (d, i) { return graph.nodes[i].name; });
 
-            node
-                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+        function makeRow(rowData) {
+            var cell = d3.select(this).selectAll('rect')
+                .data(rowData)
+                .enter().append('rect')
+                .attr('class', 'rect')
+                .attr('x', function (d, i) { return x(i); })
+                .attr('width', x.bandwidth())
+                .attr('height', x.bandwidth())
+                .style('fill', function (d) {
+                    if (!d.link) {
+                         return 'white';
+                    } else if (d.link.status.toLowerCase() === 'undef') {
+                        return 'white';
+                    } else if (d.link.status.toLowerCase() === 'operational') {
+                        if (d.link.name) {
+                            return '#00f800';
+                        } else {
+                            return '#BAF8BA';
+                        }
+                    } else {
+                        return 'blue';
+                    }
+                })
+                .on('mouseover', function (d) {
+                    row.filter(function (_, i) { return d.target.__data__.i === i; })
+                        .selectAll('text')
+                        .style('fill', '#d62333')
+                        .style('font-weight', 'bold');
+                    column.filter(function (_, j) { return d.target.__data__.j === j; })
+                        .style('fill', '#d62333')
+                        .style('font-weight', 'bold');
+                })
+                .on('mouseout', function () {
+                    row.selectAll('text')
+                        .style('fill', null)
+                        .style('font-weight', null);
+                    column
+                        .style('fill', null)
+                        .style('font-weight', null);
+                });
+            cell.append('title').text(function (d) {
+                if (!d.link) {
+                    return '';
+                } else {
+                    let text = '';
+                    if (d.link.name) {
+                        text += 'Name: ' + d.link.name + '\n';
+                    }
+                    text += 'Source: ' + d.link.source_service_name + '\n';
+                    text += 'Target: ' + d.link.target_service_name + '\n';
+                    text += 'Satellite Units: ' + d.link.satellite_units + '\n';
+                    text += 'Status: ' + d.link.status;
+                    if (d.link.whitelisted_clients) {
+                        text += '\n' + 'Whitelisted Client(s): ' + d.link.whitelisted_clients.replace(/<[^>]+>/g, '');
+                    }
+                    return  text;
+                }
+            });
         }
-
-        // Reheat the simulation when drag starts, and fix the subject position.
-        function dragstarted(event) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;
-        }
-
-        // Update the subject (dragged node) position during drag.
-        function dragged(event) {
-            event.subject.fx = event.x;
-            event.subject.fy = event.y;
-        }
-
-        // Restore the target alpha so the simulation cools after dragging ends.
-        // Unfix the subject position now that it’s no longer being dragged.
-        function dragended(event) {
-            if (!event.active) simulation.alphaTarget(0);
-            event.subject.fx = null;
-            event.subject.fy = null;
-        }
-
-        // When this cell is re-run, stop the previous simulation. (This doesn’t
-        // really matter since the target alpha is zero and the simulation will
-        // stop naturally, but it’s a good practice.)
-        // invalidation.then(() => simulation.stop());
 
         return svg.node();
     }
@@ -348,8 +415,10 @@ class ServicesViewer {
         // Check if the URL already has the "sat" parameter, and if yes, remove it
         updatedUrl.searchParams.delete('selectedSat');
 
-        // Update the URL, by adding the "selectedSat" parameter
-        updatedUrl = new URL(updatedUrl.toString() + '&selectedSat=' + sat);
+        // Update the URL, by adding the "selectedSat" parameter, if set
+        if (sat.trim().length != 0) {
+            updatedUrl = new URL(updatedUrl.toString() + '&selectedSat=' + sat);
+        }
 
         // Update the browser address bar with the updated URL
         window.history.pushState({}, '', updatedUrl);
@@ -370,10 +439,10 @@ class ServicesViewer {
         $('#service-id').val(service['id']);
         $('#service-type').val(service['type']);
         $('#service-provider').val(service['provider']);
-        $('#interface-point').val(service['interface_point']);
         $('#service-satellite-units').val(service['satellite_units']);
-        $('#cloud-provider').val(service['cloud_provider']);
+        $('#interface-point').val(service['interface_point']);
         $('#rolling-period').val(service['rolling_period']);
+        $('#cloud-provider').val(service['cloud_provider']);
         $('#service-operational-ipfs-viewer').summernote('code', service['operational_ipfs']);
         $('#service-references-viewer').summernote('code', service['references']);
 
@@ -390,10 +459,10 @@ class ServicesViewer {
         $('#service-id').val('');
         $('#service-type').val('');
         $('#service-provider').val('');
-        $('#interface-point').val('');
         $('#satellite-units').val('');
-        $('#cloud-provider').val('');
+        $('#interface-point').val('');
         $('#rolling_period').val('');
+        $('#cloud-provider').val('');
         $('#service-operational-ipfs-viewer').summernote('code', '');
         $('#service-references-viewer').summernote('code', '');
     }

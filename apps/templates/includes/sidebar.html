@@ -43,11 +43,28 @@
 								<a href="/services-viewer.html?id=9addbe90_e148_11ee_9953_0242ac140004">
 									<span class="sub-item">Services</span>
 								</a>
+								<li style="margin-left: 35px">
+									<a href="/services-network-config-viewer.html?id=9addbe90_e148_11ee_9953_0242ac140004">
+										<span class="sub-item">Network</span>
+									</a>
+								</li>
+							</li>
+							<li class=" {% if 'home' in segment %} active {% elif 'dataflow' in segment %} active
+									{% else %} {% endif %}">
+								<a href="/dataflow-viewer.html?id=627ad268_ce8c_11ef_8a52_514642c42857">
+									<span class="sub-item">Dataflow</span>
+								</a>
 							</li>
 							<li class=" {% if 'home' in segment %} active {% elif 'processor' in segment %} active
 									{% else %} {% endif %}">
 								<a href="/processors-viewer.html?id=a06c9926_d7b6_11ee_bfcd_0242c0a89003">
 									<span class="sub-item">Processors</span>
+								</a>
+							</li>
+							<li class=" {% if 'home' in segment %} active {% elif 'document' in segment %} active
+									{% else %} {% endif %}">
+								<a href="/documents-viewer.html?id=ec26bc76_ed3f_11ef_8a52_514642c42857">
+									<span class="sub-item">Documentation</span>
 								</a>
 							</li>
 						</ul>

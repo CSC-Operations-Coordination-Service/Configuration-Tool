@@ -36,7 +36,7 @@
                 <i class="flaticon-right-arrow"></i>
             </li>
             <li class="nav-item">
-                <a href="#">Services</a>
+                <a href="#">Services Editor</a>
             </li>
         </ul>
     </div>
@@ -51,7 +51,40 @@
                 <!-- Card header -->
                 <div class="card-header">
                     <div class="d-flex align-items-center">
-                        <h4 class="card-title">Services Editor</h4>
+
+                        <!-- Configuration navigation buttons -->
+                        <div class="form-group float-left mr-auto ml-2">
+                            <div class="row" id="filter-toolbar" name="filter-toolbar">
+                                <button id="version-selector-btn" class="btn btn-primary animate-up-2 ml-1"
+                                        data-toggle="modal" data-target="#version-selector-modal">
+                                     <span class="btn-label">
+                                        <i class="icon-calendar"></i>
+                                        Select version
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Configuration editor buttons -->
+                        <div class="form-group float-left ml-auto mr-2">
+                            <div class="row" id="action-toolbar" name="action-toolbar">
+                                <button id="commit-btn" class="btn btn-primary animate-up-2 ml-1"
+                                        data-toggle="modal" data-target="#new-commit-modal">
+                                    <span class="btn-label">
+                                        <i class="la flaticon-database"></i>
+                                        Commit
+                                    </span>
+                                </button>
+                                <button id="export-services-doc-btn" class="btn btn-primary animate-up-2 ml-1"
+                                        onclick="location.href='/rest/api/services/document/9addbe90_e148_11ee_9953_0242ac140004'">
+                                     <span class="btn-label">
+                                        <i class="icon-printer"></i>
+                                        Export Services Document
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -63,6 +96,8 @@
 
                         <!-- [BEG] Services Editor -->
                         <div class="row ml-1 col-md-12" id="pb-editor-container">
+
+                            <!-- Identifier of the edited service -->
                             <input id="service-id" type="hidden">
 
                             <!-- Service editor widgets -->
@@ -74,7 +109,6 @@
                                         <label class="form-check-label" for="external-service">
                                             <input id="external-service" class="form-check-input" type="checkbox">
                                                 <span class="form-check-sign">Check to mark the service as "External"</span>
-                                            </input>
                                         </label>
                                     </div>
                                 </div>
@@ -120,12 +154,20 @@
                                 <!-- Second column -->
                                 <div class="col-md-4">
                                     <div class="mb-2">
+                                        <label for="service-address-wysiwyg-editor">Service Address</label>
+                                        <div id="service-address-wysiwyg-editor"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Third column -->
+                                <div class="col-md-4">
+                                    <div class="mb-2">
                                         <label for="operational-ipfs-wysiwyg-editor">Operational IPF (if applicable)</label>
                                         <div id="operational-ipfs-wysiwyg-editor"></div>
                                     </div>
                                 </div>
 
-                                <!-- Third column -->
+                                <!-- Fourth column -->
                                 <div class="col-md-4">
                                     <div class="mb-2">
                                         <label for="references-wysiwyg-editor">References</label>
@@ -160,11 +202,12 @@
                                                 <th style="max-width: 80px">Provider</th>
                                                 <th style="max-width: 80px">Satellite Unit(s)</th>
                                                 <th style="max-width: 80px">Interface Point</th>
-                                                <th style="max-width: 70px">Cloud Provider</th>
                                                 <th style="max-width: 50px">Rolling Period</th>
+                                                <th style="max-width: 70px">Cloud Provider</th>
+                                                <th style="max-width: 70px">Service Address</th>
                                                 <th style="max-width: 250px">Operational IPFs</th>
                                                 <th>References</th>
-                                                <th style="max-width: 70px">Actions</th>
+                                                <th style="max-width: 50px">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody></tbody>
@@ -182,29 +225,54 @@
                         <!-- [BEG] Interfaces Editor -->
                         <h4 class="card-title">Interfaces Configuration</h4>
                         <div class="row ml-1 col-md-12 mt-2" id="if-editor-container">
+
+                            <!-- Identifier of the edited interface -->
                             <input id="interface-id" type="hidden">
 
                             <!-- Interface editor widgets -->
                             <div class="row form-group col-md-12">
-                                <div class="col-md-3">
-                                    <label for="source-service-type">Source Service Type<span class="required">*</span></label>
-                                    <select class="form-control" id="source-service-type"></select>
+
+                                <!-- First column -->
+                                <div class="col-md-6">
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label for="interface-name">Interface Name<span class="required">*</span></label>
+                                            <input class="form-control" id="interface-name" placeholder="Enter the interface name"
+                                                   type="text"></input>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="interface-status">Status<span class="required">*</span></label>
+                                            <select class="form-control" id="interface-status"></select>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label for="source-service-type">Source Service Type<span class="required">*</span></label>
+                                            <select class="form-control" id="source-service-type"></select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="source-service-provider">Source Service Provider<span class="required">*</span></label>
+                                            <select class="form-control" id="source-service-provider"></select>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-6">
+                                            <label for="target-service-type">Target Service Type<span class="required">*</span></label>
+                                            <select class="form-control" id="target-service-type"></select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="target-service-provider">Target Service Provider<span class="required">*</span></label>
+                                            <select class="form-control" id="target-service-provider"></select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="source-service-provider">Source Service Provider<span class="required">*</span></label>
-                                    <select class="form-control" id="source-service-provider"></select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="target-service-type">Target Service Type<span class="required">*</span></label>
-                                    <select class="form-control" id="target-service-type"></select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="target-service-provider">Target Service Provider<span class="required">*</span></label>
-                                    <select class="form-control" id="target-service-provider"></select>
-                                </div>
-                                <div class="col-md-3 mt-3">
-                                    <label for="interface-status">Status<span class="required">*</span></label>
-                                    <select class="form-control" id="interface-status"></select>
+
+                                <!-- Second column -->
+                                <div class="col-md-4">
+                                    <div class="mb-2">
+                                        <label for="whitelisted-clients-wysiwyg-editor">Whitelisted Clients</label>
+                                        <div id="whitelisted-clients-wysiwyg-editor"></div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -229,12 +297,14 @@
                                         <thead>
                                             <tr>
                                                 <th>Interface Id</th>
+                                                <th>Interface Name</th>
                                                 <th>Source Service Type</th>
                                                 <th>Source Service Provider</th>
                                                 <th>Target Service Type</th>
                                                 <th>Target Service Provider</th>
+                                                <th>Whitelisted Clients</th>
                                                 <th style="max-width: 100px">Status</th>
-                                                <th style="max-width: 70px">Actions</th>
+                                                <th style="max-width: 50px">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody></tbody>

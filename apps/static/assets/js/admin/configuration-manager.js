@@ -47,11 +47,17 @@ class ConfigurationManager {
                             var name = configuration['name'];
                             if (name === 'Interfaces') {
                                 return manager.buildInterfacesActionButtons(configuration);
-                            } else if (name == 'Processors') {
+                            } else if (name === 'Processors') {
                                 return manager.buildProcessorsActionButtons(configuration);
-                            } else if (name == 'Services') {
+                            } else if (name === 'Services') {
                                 return manager.buildServicesActionButtons(configuration);
-                            } else ;
+                            } else if (name === 'Dataflow') {
+                                return manager.buildDataflowActionButtons(configuration);
+                            } else if (name === 'Documentation') {
+                                return manager.buildDocumentsActionButtons(configuration);
+                            } else {
+                                return data;
+                            }
                         } else {
                             return data;
                         }
@@ -81,7 +87,7 @@ class ConfigurationManager {
                         '<img class="navbar-brand-light" src="/static/assets/img/icons/preview_black_24dp.svg" alt="Open configuration" />' +
                         'Edit configuration' +
                     '</a>' +
-                    '<a class="dropdown-item rounded-top" href="/interfaces-versioning.html?id='+configuration['id']+'" target="_blank">' +
+                    '<a class="dropdown-item rounded-top" href="/configuration-versioning.html?id='+configuration['id']+'" target="_blank">' +
                         '<img class="navbar-brand-light" src="/static/assets/img/icons/database_black_24px.png" alt="Download description document" />' +
                         'Open configuration versioning' +
                     '</a>' +
@@ -133,9 +139,61 @@ class ConfigurationManager {
                         '<img class="navbar-brand-light" src="/static/assets/img/icons/preview_black_24dp.svg" alt="Open configuration" />' +
                         'Edit configuration' +
                     '</a>' +
+                    '<a class="dropdown-item rounded-top" href="/configuration-versioning.html?id='+configuration['id']+'" target="_blank">' +
+                        '<img class="navbar-brand-light" src="/static/assets/img/icons/database_black_24px.png" alt="Download description document" />' +
+                        'Open configuration versioning' +
+                    '</a>' +
                     '<a class="dropdown-item rounded-top" href="/rest/api/services/document/'+configuration['id']+'">' +
                         '<img class="navbar-brand-light" src="/static/assets/img/icons/document-signed.svg" alt="Download description document" />' +
                         'Download description document' +
+                    '</a>' +
+                    '<a name="delete_scenario_link" class="dropdown-item rounded-top" href="#" onClick="manager.deleteConfiguration(\''+configuration['id']+'\');">' +
+                        '<img id=\'ID_ACTION_DELETE_'+configuration['id']+'\' class="navbar-brand-light" src="/static/assets/img/icons/delete_black_24dp.svg" alt="Delete configuration" />' +
+                        'Delete configuration' +
+                    '</a>' +
+                '</ul>' +
+            '</div>'
+        return actions;
+    }
+
+    buildDataflowActionButtons(configuration) {
+        let actions =
+            '<div class="input-group-append">' +
+                '<button type="button" class="btn btn-primary btn-border dropdown-toggle" data-toggle="dropdown" aria-expanded="false">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">' +
+                        '<path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>' +
+                    '</svg>' +
+                '</button>' +
+                '<div class="dropdown-menu">' +
+                    '<a class="dropdown-item rounded-top" href="/dataflow-editor.html?id='+configuration['id']+'" target="_blank">' +
+                        '<img class="navbar-brand-light" src="/static/assets/img/icons/preview_black_24dp.svg" alt="Open configuration" />' +
+                        'Edit configuration' +
+                    '</a>' +
+                    '<a class="dropdown-item rounded-top" href="/configuration-versioning.html?id='+configuration['id']+'" target="_blank">' +
+                        '<img class="navbar-brand-light" src="/static/assets/img/icons/database_black_24px.png" alt="Download description document" />' +
+                        'Open configuration versioning' +
+                    '</a>' +
+                    '<a name="delete_scenario_link" class="dropdown-item rounded-top" href="#" onClick="manager.deleteConfiguration(\''+configuration['id']+'\');">' +
+                        '<img id=\'ID_ACTION_DELETE_'+configuration['id']+'\' class="navbar-brand-light" src="/static/assets/img/icons/delete_black_24dp.svg" alt="Delete configuration" />' +
+                        'Delete configuration' +
+                    '</a>' +
+                '</ul>' +
+            '</div>'
+        return actions;
+    }
+
+    buildDocumentsActionButtons(configuration) {
+        let actions =
+            '<div class="input-group-append">' +
+                '<button type="button" class="btn btn-primary btn-border dropdown-toggle" data-toggle="dropdown" aria-expanded="false">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">' +
+                        '<path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>' +
+                    '</svg>' +
+                '</button>' +
+                '<div class="dropdown-menu">' +
+                    '<a class="dropdown-item rounded-top" href="/documents-editor.html?id='+configuration['id']+'" target="_blank">' +
+                        '<img class="navbar-brand-light" src="/static/assets/img/icons/preview_black_24dp.svg" alt="Open configuration" />' +
+                        'Edit configuration' +
                     '</a>' +
                     '<a name="delete_scenario_link" class="dropdown-item rounded-top" href="#" onClick="manager.deleteConfiguration(\''+configuration['id']+'\');">' +
                         '<img id=\'ID_ACTION_DELETE_'+configuration['id']+'\' class="navbar-brand-light" src="/static/assets/img/icons/delete_black_24dp.svg" alt="Delete configuration" />' +
@@ -248,7 +306,7 @@ class ConfigurationManager {
             {
                 text: 'Yes',
                 click: function() {
-                    var data = {configId}
+                    var data = {'configId': configId}
                     ajaxCall('/rest/api/configurations', 'DELETE', data, manager.successDeleteConfiguration,
                             manager.errorDeleteConfiguration);
                     $(this).dialog("close");

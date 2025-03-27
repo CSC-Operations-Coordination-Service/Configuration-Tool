@@ -34,8 +34,8 @@ class ProcessorsEditor {
         };
 
         this.IPFsMap = {
-            'S1': ['S1_L0', 'S1_L1L2', 'S1_ERRMAT', 'S1_SETAP'],
-            'S2': ['S2_L0', 'S2_L1', 'S2_L2'],
+            'S1': ['S1_L0', 'S1_L1L2', 'S1_ERRMAT', 'S1_SETAP', 'S1_AMALFI'],
+            'S2': ['S2_L0', 'S2_L1', 'S2_L2', 'S2_EUP'],
             'S3': ['S3_PUG', 'S3_L0', 'S3_OL1', 'S3_OL1_RAC', 'S3_OL1_SPC', 'S3_OL2',
                    'S3_SL1', 'S3_SL2', 'S3_SL2_LST', 'S3_SL2_FRP',
                    'S3_SR1', 'S3_SR2', 'S3_SM2_HY', 'S3_SM2_LI', 'S3_SM2_SI', 'S3_MW1',

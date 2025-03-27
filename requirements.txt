@@ -23,3 +23,8 @@ sphinx==7.0.1
 pillow==10.2.0
 html2text==2024.2.26
 htmldocx==0.0.6
+Flask-Login~=0.6.2
+Flask-Migrate~=4.0.4
+jira==3.4.1
+beautifulsoup4==4.11.1
+schedule==1.1.0

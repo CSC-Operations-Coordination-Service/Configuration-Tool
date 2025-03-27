@@ -37,6 +37,9 @@ class InterfacesViewer {
 
     init() {
 
+        // Init the version selector panel
+        initVersionSelector();
+
         // Set custom JsPlumb properties
         this.initCanvas();
 
@@ -51,9 +54,6 @@ class InterfacesViewer {
 
         // Init the WYSIWYG Editors for references and notes
         this.initWYSIWYGEditors();
-
-        // Init the version selector panel
-        this.initVersionSelector();
 
         // Load the specified Interface Configuration
         this.loadInterfaceConfiguration();
@@ -132,64 +132,12 @@ class InterfacesViewer {
         $('#interface-notes-viewer').summernote('disable');
     }
 
-    initVersionSelector() {
-        var url = new URL(window.location);
-        var idScenario = url.searchParams.get('id');
-        ajaxCall('/rest/api/interfaces/commit/'+idScenario, 'GET', {}, this.successLoadCommits, this.errorLoadCommits);
-    }
-
-    successLoadCommits(response) {
-
-        // Auxiliary variable declaration
-        var url = new URL(window.location);
-        var idScenario = url.searchParams.get('id');
-        var versions = formatResponse(response);
-        var data = new Array();
-
-        // Check if the URL already has the version parameter, and if yes, eliminate it
-        if (url.searchParams.get('version')) {
-            url = url.toString().replace(/[\?&]version=[^&]+/g, '');
-        } else {
-            url = url.toString();
-        }
-
-        // Loop over the available versions, and append the corresponding
-        // entry in the versioning table
-        for (var i = 0 ; i < versions.length ; i++) {
-
-            // Save the interface row in a class member
-            var version = versions[i];
-
-            // Append the interface row
-            var ver = {};
-            ver['title'] = version['comment'];
-            ver['date'] = moment(version['last_modify'], 'DD/MM/yyyy, HH:mm:ss').toDate().getTime();
-            ver['link'] = url.toString() + '&version=' + version['n_ver'];
-            data.push(ver);
-        }
-
-        // Refresh the scenario datatable
-        $('#event-calendar').MEC({
-            calendar_link: url.toString().replace(/[\?&]version=[^&]+/g, ''),
-			events: data
-        });
-
-        // Customize the calendar
-        $("#eventTitle").text('');
-        $("#calLink").text('');
-    }
-
-    errorLoadCommits(response) {
-        console.error("Unable to load the configuration versions");
-        console.error(response);
-    }
-
     loadInterfaceConfiguration() {
         var url = new URL(window.location);
         var configId = url.searchParams.get('id');
         var version = url.searchParams.get('version');
         var ajaxCallURL = '/rest/api/interfaces/' + configId;
-        if (version) ajaxCallURL = '/rest/api/interfaces/commit/' + configId + '/' + version;
+        if (version) ajaxCallURL = '/rest/api/configurations/commit/' + configId + '/' + version;
         ajaxCall(ajaxCallURL, 'GET', {}, this.successLoadConfiguration, this.errorLoadConfiguration);
     }
 
@@ -730,11 +678,6 @@ class InterfacesViewer {
         $('#interface-content').val('');
         $('#interface-notes-viewer').summernote('code', '');
         $('#interface-references-viewer').summernote('code', '');
-    }
-
-    refreshTagField() {
-        $('#id_commit_tag_block').attr("readonly",
-            !document.getElementById('tag_commit_checkbox').checked);
     }
 
 }

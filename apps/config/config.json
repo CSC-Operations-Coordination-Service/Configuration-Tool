@@ -1,0 +1,21 @@
+{
+   "config":{
+      "configurations": {
+         "interfaces": "8cf730fa_82ce_11ee_8b95_15e6d0d67ea8",
+         "processors": "a06c9926_d7b6_11ee_bfcd_0242c0a89003",
+         "services": "9addbe90_e148_11ee_9953_0242ac140004",
+         "dataflow": "627ad268_ce8c_11ef_8a52_514642c42857",
+         "documentation": "ec26bc76_ed3f_11ef_8a52_514642c42857"
+      },
+      "jira_omcs_config": {
+         "host": "https://omcs.atlassian.net",
+         "cloud_id": "a2485718-d964-4b99-9afe-c7632ec9a16b",
+         "user_email": "coordination_desk@telespazio.com",
+         "password": ".44C00rdD3sk",
+         "token": "ATATT3xFfGF0MwwetuQAyVuGo2EpLUeyN3D9MDmUZU25WNnakIIGR083qdlt3MFBOIerSkPwN280FFYpCmYBm4haQrtEJGVBKKvC8TALR5bn2WWQT8aEY41AcY62O1MJNrSXqNuWlg0ZSqhDSJ5NpYV-w_E5KKpM0lWywAgDCOtTgctliMoIKtc=DE9E62F7",
+         "encoded_text": "Y29vcmRpbmF0aW9uX2Rlc2tAb21jcy5hdGxhc3NpYW4ubmV0OkFUQVRUM3hGZkdGME13d2V0dVFBeVZ1R28yRXBMVWV5TjNEOU1EbVVaVTI1V05uYWtJSUdSMDgzcWRsdDNNRkJPSWVyU2tQd04yODBGRllwQ21ZQm00aGFRcnRFSkdWQktLdkM4VEFMUjVibjJXV1FUOGFFWTQxQWNZNjJPMU1KTnJTWHFOdVdsZzBaU3FoRFNKNU5wWVYtd19FNUtLcE0wbFd5d0FnRENPdFRnY3RsaU1vSUt0Yz1ERTlFNjJGNw==",
+         "ipf_tickets_jql": "project=SOA AND issuetype='IPF deployment' AND status = Approved AND created >= -40w order by 'created' DESC"
+      }
+   }
+}
+
