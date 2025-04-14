@@ -129,10 +129,10 @@ class ServicesNetworkConfigViewer {
             var target = servicesNetworkConfigViewer.getService(ifc['target_service_id']);
 
             // Fill the remaining cells with the information from source / target
-            row.push(source['type']);
-            row.push(source['provider']);
-            row.push(target['type']);
-            row.push(target['provider']);
+            row.push(source != null ? source['type'] : '');
+            row.push(source != null ? source['provider'] : '');
+            row.push(target != null ? target['type'] : '');
+            row.push(target != null ? target['provider'] : '');
             row.push(ifc['whitelisted_clients']);
             data.push(row);
         }
