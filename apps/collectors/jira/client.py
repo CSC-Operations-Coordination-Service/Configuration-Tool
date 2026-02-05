@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Configuration Tool
+"""Configuration Tool
 
 The Configuration Tool is a software program produced for the European Space
 Agency.
@@ -31,24 +31,24 @@ from jira import JIRA
 
 from apps.config import Configuration
 
-class JiraClient:
 
+class JiraClient:
     def __init__(self, basic_auth=None, options=None):
         self.__client = None
         if basic_auth is None:
             jira_config = Configuration().get_object("jira_omcs_config")
-            user_email = jira_config['user_email']
-            token = jira_config['token']
+            user_email = jira_config["user_email"]
+            token = jira_config["token"]
             basic_auth = (user_email, token)
         if options is None:
             jira_config = Configuration().get_object("jira_omcs_config")
-            host = jira_config['host']
+            host = jira_config["host"]
             options = {
                 "server": host,
                 "headers": {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                }
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
             }
         self.init(basic_auth, options)
         return
@@ -63,27 +63,15 @@ class JiraClient:
     def get_issue(self, issue):
         return self.__client.issue(issue)
 
-    def search(self, jql, start_at=0, max_results=50):
-        res = self.__client.search_issues(jql, startAt=start_at, maxResults=max_results)
+    def search(self, jql, max_results=50):
+        res = self.__client.enhanced_search_issues(jql, maxResults=max_results)
         return res
 
     def search_all(self, jql):
         total = []
         all_value = 1
-        start_at = 0
-        while start_at < all_value:
-            res = self.__client.search_issues(jql, startAt=start_at, maxResults=10000)
-            if res is None or len(res) == 0:
-                return total
-            all_value = res.total
-            start_at += res.maxResults
-            total += res.iterable
-
-        return total
-
-    def search_issue_by_project(self, project, start_at=0, max_results=50):
-        res = self.search('project=' + project, start_at=start_at, max_results=max_results)
-        return res
+        res = self.__client.enhanced_search_issues(jql, maxResults=False)
+        return list(res)
 
     def collect_tickets(self, jql):
         res = self.search_all(jql)
