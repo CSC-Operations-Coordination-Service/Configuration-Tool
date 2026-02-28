@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Configuration Tool
+"""Configuration Tool
 
 The Configuration Tool is a software program produced for the European Space
 Agency.
@@ -38,13 +38,12 @@ from docx.oxml.ns import qn
 from docx.shared import Inches
 from docx.table import _Cell
 from docx.text.paragraph import Paragraph
-from htmldocx import HtmlToDocx
+from html4docx import HtmlToDocx
 
 from apps.utils import file_utils
 
 
 class WordGenerator:
-
     def __init__(self, path_to_document=None):
         self.__document = None
         self.__map = {}
@@ -131,8 +130,9 @@ class WordGenerator:
         # Use a unique identifier for each image
         image_id = len(self.__map) + 1
         if paragraph is None:
-            self.__map[image_id] = self.__document.add_picture(image_path, width=Inches(width),
-                                                               height=Inches(height))
+            self.__map[image_id] = self.__document.add_picture(
+                image_path, width=Inches(width), height=Inches(height)
+            )
             last_paragraph = self.__document.paragraphs[-1]
             last_paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
         else:
@@ -140,41 +140,41 @@ class WordGenerator:
             paragraph._p.addnext(new_p)
             added_par = Paragraph(new_p, paragraph._parent)
             run = added_par.add_run()
-            self.__map[image_id] = run.add_picture(image_path, width=Inches(width),
-                                                   height=Inches(height))
+            self.__map[image_id] = run.add_picture(
+                image_path, width=Inches(width), height=Inches(height)
+            )
             added_par.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
             # If present, add a figure caption
             if caption:
-
                 # New caption paragraph
                 new_p = OxmlElement("w:p")
                 added_par._p.addnext(new_p)
                 caption_par = Paragraph(new_p, added_par._parent)
-                caption_par.style = 'Caption'
+                caption_par.style = "Caption"
                 caption_par.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
                 # Add figure label
-                caption_par.add_run('Figure ')
+                caption_par.add_run("Figure ")
 
                 # Add automatic numbering
                 run = caption_par.add_run()
                 r = run._r
 
-                fldChar = docx.oxml.OxmlElement('w:fldChar')
-                fldChar.set(docx.oxml.ns.qn('w:fldCharType'), 'begin')
+                fldChar = docx.oxml.OxmlElement("w:fldChar")
+                fldChar.set(docx.oxml.ns.qn("w:fldCharType"), "begin")
                 r.append(fldChar)
 
-                instrText = docx.oxml.OxmlElement('w:instrText')
-                instrText.text = ' SEQ Figure \\* ARABIC'
+                instrText = docx.oxml.OxmlElement("w:instrText")
+                instrText.text = " SEQ Figure \\* ARABIC"
                 r.append(instrText)
 
-                fldChar = docx.oxml.OxmlElement('w:fldChar')
-                fldChar.set(docx.oxml.ns.qn('w:fldCharType'), 'end')
+                fldChar = docx.oxml.OxmlElement("w:fldChar")
+                fldChar.set(docx.oxml.ns.qn("w:fldCharType"), "end")
                 r.append(fldChar)
 
                 # Add text
-                caption_par.add_run(' ' + caption)
+                caption_par.add_run(" " + caption)
 
         return image_id
 
@@ -237,8 +237,8 @@ class WordGenerator:
         assert direction in ("tbRl", "btLr")
         tc = cell._tc
         tcPr = tc.get_or_add_tcPr()
-        textDirection = OxmlElement('w:textDirection')
-        textDirection.set(qn('w:val'), direction)  # btLr tbRl
+        textDirection = OxmlElement("w:textDirection")
+        textDirection.set(qn("w:val"), direction)  # btLr tbRl
         tcPr.append(textDirection)
 
     def save(self, name):
@@ -249,5 +249,7 @@ class WordGenerator:
         :rtype:
         """
         path = tempfile.gettempdir()
-        self.__document.save(path + '/' + name + ' - ' + file_utils.get_date_for_file() + '.docx')
-        return path + '/' + name + ' - ' + file_utils.get_date_for_file() + '.docx'
+        self.__document.save(
+            path + "/" + name + " - " + file_utils.get_date_for_file() + ".docx"
+        )
+        return path + "/" + name + " - " + file_utils.get_date_for_file() + ".docx"
