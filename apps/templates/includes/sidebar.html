@@ -5,15 +5,13 @@
 	<div class="sidebar-wrapper scrollbar scrollbar-inner">
 		<div class="sidebar-content">
 			<ul class="nav nav-primary" id="sidebar-navigation-menu">
-				<li class="nav-item {% if 'home' in segment %} active {% elif 'interface' in segment %} active
-						{% else %} {% endif %}">
+				<li class="nav-item {% if ('home' in segment) or ('interface' in segment) or ('service' in segment) or ('dataflow' in segment) or ('processor' in segment) or ('document' in segment) %} active  {% endif %}">
 					<a data-toggle="collapse" href="#home" class="collapse" aria-expanded="false">
 						<i class="fas fa-home"></i>
 						<p>Home</p>
 						<span class="caret"></span>
 					</a>
-					<div class="collapse {% if 'home' in segment %} show {% elif 'interface' in segment %} show
-							{% elif 'service' in segment %} show {% else %} {% endif %}" id="home">
+					<div class="collapse {% if ('home' in segment) or ('interface' in segment) or ('service' in segment) or ('dataflow' in segment) or ('processor' in segment) or ('document' in segment) %} show {% else %} {% endif %}" id="home">
 						<ul class="nav nav-collapse">
 							<li class=" {% if 'home' in segment %} active {% elif 'interface' in segment %} active
 									{% else %} {% endif %}">
