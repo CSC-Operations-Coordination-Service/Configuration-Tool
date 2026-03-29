@@ -190,17 +190,29 @@ class DataflowEditor {
                   "emptyTable": "Add a dataflow relation between entities..."
                 },
                 "sDom": "rt",
+                rowId: function(data) {
+                    var id = 'id_' + data[0];
+                    const text = data[1].toString();
+                    for (var i = 0; i < text.length; i++) {
+                        id = id + text.charCodeAt(i).toString();
+                    }
+                    return id;
+                },
                 columnDefs: [
                 {
                     targets: -1,
                     data: null,
                     render: function (data, type, full, meta) {
                         if (type === 'display') {
-                            var index = meta.row;
+                            var id = 'id_' + data[0];
+                            const text = data[1].toString();
+                            for (var i = 0; i < text.length; i++) {
+                                id = id + text.charCodeAt(i).toString();
+                            }
                             let actions =
                                 '<div class="form-button-action">' +
                                     '<button name="delete-relation" type="button" title="" class="btn btn-link btn-danger" ' +
-                                          'onclick="dataflowEditor.deleteEntityRelation(\'' + index + '\');"><i class="fas fa-trash"></i>' +
+                                          'onclick="dataflowEditor.deleteEntityRelation(\'#' + id + '\');"><i class="fas fa-trash"></i>' +
                                     '</button>'+
                                 '</div>'
                             return actions;
