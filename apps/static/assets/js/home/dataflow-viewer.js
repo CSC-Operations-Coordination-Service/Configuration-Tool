@@ -23,23 +23,27 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 class DataflowViewer {
 
     constructor() {
-
-        this.missions = ['S1', 'S2', 'S3', 'S5P', 'S6'];
-
+    
         this.missionNames = {
-                'S1': 'Sentinel-1',
-                'S2': 'Sentinel-2',
-                'S3': 'Sentinel-3',
+                'S1':  'Sentinel-1',
+                'S2':  'Sentinel-2',
+                'S3':  'Sentinel-3',
                 'S5P': 'Sentinel-5P',
-                'S6': 'Sentinel-6'};
+                'S6':  'Sentinel-6'};
 
-        this.groups = ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports', 'Removed Products', 'Removed AUX Data'];
+        this.groups = {
+                'S1':  ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports', 'Removed Products', 'Removed AUX Data', 'Removed MP and FOS files'],
+                'S2':  ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports'],
+                'S3':  ['Products', 'AUX Data', 'Removed Products', 'Removed AUX Data'],
+                'S5P': ['Products', 'AUX Data', 'Removed Products', 'Removed AUX Data'],
+                'S6':  ['AUX Data'],
+        };
 
         this.entities = ['PR', 'FOS', 'MP', 'ADG', 'E2E', 'MPC', 'LTA', 'DA', 'EUM', 'EXT', 'RS', 'POD', 'EDRS', 'X-Band'];
 
         this.productTypes = [];
 
-    }
+    };
 
     init() {
 
@@ -57,6 +61,18 @@ class DataflowViewer {
 
     }
 
+    updateDataflowViewerGroups(mission) {
+        // Reset the Dataflow Configuration dropdown menu and set options
+        $('#dataflow-viewer-groups').find('option').remove().end();
+        dataflowViewer.groups[mission].forEach(group => {
+            $('#dataflow-viewer-groups').append($('<option>', {
+                value: group,
+                text : group
+            }));
+        });
+    $('#dataflow-viewer-groups').val(this.groups[mission][0]);
+    }
+
     initDataflowConfigurationSelectors() {
 
         // Reset the Missions dropdown menu and set options
@@ -68,14 +84,7 @@ class DataflowViewer {
             }));
         });
 
-        // Reset the Dataflow Configuration dropdown menu and set options
-        $('#dataflow-viewer-groups').find('option').remove().end();
-        dataflowViewer.groups.forEach(group => {
-            $('#dataflow-viewer-groups').append($('<option>', {
-                value: group,
-                text : group
-            }));
-        });
+        this.updateDataflowViewerGroups('S1')
 
         // On Mission selection change, update the displayed dataflow configuration
         $('#dataflow-viewer-missions').on('change', function (e) {
@@ -84,9 +93,9 @@ class DataflowViewer {
             var optionSelected = $("option:selected", this);
             var missionSelected = this.value;
 
-            // Retrieve the selected configuration
-            var configurationSelected = $('#dataflow-viewer-groups').val();
+            dataflowViewer.updateDataflowViewerGroups(missionSelected)
 
+            var configurationSelected = $('#dataflow-viewer-groups').val();
             // Update the displayed product types
             dataflowViewer.updateDisplayedConfiguration(missionSelected, configurationSelected);
 
@@ -229,49 +238,105 @@ class DataflowViewer {
         // Hide columns on the basis of the selected configuration group
         // 'ID' 'Prod Type' 'Payload' 'Level' 'S1-Mode' 'S1-Typ' 'Desc' 'PR' 'FOS' 'MP' 'ADG' 'E2E' 'MPC' 'LTA' 'DA' 'EUM' 'EXT' 'RS' 'POD' 'EDRS' 'X-Band'
         //   0        1         2        3         4        5       6     7     8    9    10    11    12    13   14    15    16   17    18     19      20
-        if (selectedConfiguration === 'Products') {
-            if (selectedMission === 'S1') {
+
+        // default, should always be overridden
+        dataflowViewer.dataflowTable.columns(Array.from({ length: 21 }, (value, index) => index)).visible(false);
+
+        if (selectedMission === 'S1')
+        {
+            if (selectedConfiguration === 'Products') {
                 dataflowViewer.dataflowTable.columns([1,2,3,4,5,7,8,12,13,14,18]).visible(true);
                 dataflowViewer.dataflowTable.columns([0,6,9,10,11,15,16,17,19,20]).visible(false);
-            } else if (selectedMission === 'S2') {
-                dataflowViewer.dataflowTable.columns([1,2,3,6,7,8,12,13,14,18]).visible(true);
-                dataflowViewer.dataflowTable.columns([0,4,5,9,10,11,15,16,17,19,20]).visible(false);
-            } else if (selectedMission === 'S3') {
-                dataflowViewer.dataflowTable.columns([1,2,3,6,7,12,13,14,15,18]).visible(true);
-                dataflowViewer.dataflowTable.columns([0,4,5,8,9,10,11,16,17,19,20]).visible(false);
-            } else {
-                dataflowViewer.dataflowTable.columns([1,2,3,6,7,8,12,13,14,18]).visible(true);
-                dataflowViewer.dataflowTable.columns([0,4,5,9,10,11,15,16,17,19,20]).visible(false);
             }
-        }
-        if (selectedConfiguration === 'AUX Data') {
-            if (selectedMission === 'S3') {
-                dataflowViewer.dataflowTable.columns([1,6,7,8,9,10,12,13,14,15,16,17,18]).visible(true);
-                dataflowViewer.dataflowTable.columns([0,2,3,4,5,11,19,20]).visible(false);
-            } else {
+            else if (selectedConfiguration === 'AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,8,9,10,12,13,14,18,20]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,7,11,15,16,17,19]).visible(false);
+            }
+            else if (selectedConfiguration === 'MP and FOS files') {
+                dataflowViewer.dataflowTable.columns([1,6,7,8,9,10,12,14,18,19,20]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,11,13,15,16,17]).visible(false);
+            }
+            else if (selectedConfiguration === 'OLQC Reports') {
+                dataflowViewer.dataflowTable.columns([1,7,11,12,13,14]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,6,8,9,10,15,16,17,18,19]).visible(false);
+            }
+            else if (selectedConfiguration === 'Removed Products') {
+                dataflowViewer.dataflowTable.columns([1,2,3,4,5,7,8,12,13,14,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,6,9,10,11,15,16,17,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'Removed AUX Data') {
                 dataflowViewer.dataflowTable.columns([1,6,7,8,9,10,12,13,14,18,20]).visible(true);
                 dataflowViewer.dataflowTable.columns([0,2,3,4,5,11,15,16,17,19]).visible(false);
             }
-        }
-        if (selectedConfiguration === 'MP and FOS files') {
-            if (selectedMission === 'S1') {
+            else if (selectedConfiguration === 'Removed MP and FOS files') {
                 dataflowViewer.dataflowTable.columns([1,6,7,8,9,10,12,14,18,19,20]).visible(true);
                 dataflowViewer.dataflowTable.columns([0,2,3,4,5,11,13,15,16,17]).visible(false);
-            } else {
+            }
+
+        } else if (selectedMission === 'S2')
+        {
+            if (selectedConfiguration === 'Products') {
+                dataflowViewer.dataflowTable.columns([1,2,3,5,7,8,12,13,14,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,4,6,9,10,11,15,16,17,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,7,8,9,10,12,13,14,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,11,15,16,17,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'MP and FOS files') {
                 dataflowViewer.dataflowTable.columns([1,6,7,8,9,10,12,14,18]).visible(true);
                 dataflowViewer.dataflowTable.columns([0,2,3,4,5,11,13,15,16,17,19,20]).visible(false);
             }
-        }
-        if (selectedConfiguration === 'OLQC Reports') {
-            dataflowViewer.dataflowTable.columns([1,7,11,12,13,14]).visible(true);
-            dataflowViewer.dataflowTable.columns([0,2,3,4,5,6,8,9,10,15,16,17,18,19]).visible(false);
-        }
-        if (selectedConfiguration === 'Removed Products') {
-            dataflowViewer.dataflowTable.columns([,,,]).visible(false);
-        }
-        if (selectedConfiguration === 'Removed AUX Data') {
-            dataflowViewer.dataflowTable.columns([,,,]).visible(false);
-        }
+            else if (selectedConfiguration === 'OLQC Reports') {
+                dataflowViewer.dataflowTable.columns([1,7,11,12,13,14]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,6,8,9,10,15,16,17,18,19]).visible(false);
+            }
+
+        } else if (selectedMission === 'S3')
+        {
+            if (selectedConfiguration === 'Products') {
+                dataflowViewer.dataflowTable.columns([1,2,3,6,7,12,13,14,15,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,4,5,8,9,10,11,16,17,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,7,10,12,13,14,15,16,17,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,8,9,11,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'Removed Products') {
+                dataflowViewer.dataflowTable.columns([1,2,3,6,7,12,13,14,15,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,4,5,8,9,10,11,16,17,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'Removed AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,7,10,12,13,14,15,16,17,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,8,9,11,19,20]).visible(false);
+            }
+
+        } else if (selectedMission === 'S5P')
+        {
+            if (selectedConfiguration === 'Products') {
+                dataflowViewer.dataflowTable.columns([1,2,3,7,12,13,14]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,4,5,6,8,9,10,11,15,16,17,18,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,7,8,12,13,14]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,9,10,11,15,16,17,18,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'Removed Products') {
+                dataflowViewer.dataflowTable.columns([1,2,3,7,12,13,14]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,4,5,6,8,9,10,11,15,16,17,18,19,20]).visible(false);
+            }
+            else if (selectedConfiguration === 'Removed AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,7,8,12,13,14]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,9,10,11,15,16,17,18,19,20]).visible(false);
+            }
+
+        } else if (selectedMission === 'S6')
+        {
+            if (selectedConfiguration === 'AUX Data') {
+                dataflowViewer.dataflowTable.columns([1,6,14,18]).visible(true);
+                dataflowViewer.dataflowTable.columns([0,2,3,4,5,7,8,9,10,11,12,13,15,16,17,19,20]).visible(false);
+            }
+        } 
     }
 }
 

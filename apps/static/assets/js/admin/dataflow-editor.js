@@ -49,7 +49,7 @@ class DataflowEditor {
                 'S6': []
         };
 
-        this.groups = ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports', 'Removed Products', 'Removed AUX Data'];
+        this.groups = ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports', 'Removed Products', 'Removed AUX Data', 'Removed MP and FOS files'];
 
         this.entities = ['ADG', 'DA', 'E2E', 'EDRS', 'EUM', 'EXT', 'FOS', 'LTA', 'MP', 'MPC', 'POD', 'PR', 'RS', 'X-Band'];
 
