@@ -80,6 +80,14 @@ class DocumentsViewer {
                     {
                         text: '<i class="icon-printer"></i><span>&nbsp&nbspExport to Excel</span>',
                         extend: 'excelHtml5',
+                        filename: function () {
+                            var name = 'Dataflow_';
+			    var current_date = new Date();
+                            name = name + $('#docs-viewer-groups').val() + '_';
+                            name = name + $('#docs-viewer-services').val() + '_';
+                            name = name + formatDateTime(current_date);
+                            return name;
+                        },
                         exportOptions: {
                             columns: ':visible'
                         }

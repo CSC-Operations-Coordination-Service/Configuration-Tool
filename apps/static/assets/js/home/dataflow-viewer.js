@@ -24,6 +24,7 @@ class DataflowViewer {
 
     constructor() {
     
+        this.missions = ['S1', 'S2', 'S3', 'S5P', 'S6'];
         this.missionNames = {
                 'S1':  'Sentinel-1',
                 'S2':  'Sentinel-2',
@@ -129,6 +130,14 @@ class DataflowViewer {
                     {
                         text: '<i class="icon-printer"></i><span>&nbsp&nbspExport to Excel</span>',
                         extend: 'excelHtml5',
+                        filename: function () {
+                            var name = 'Dataflow_';
+			    var current_date = new Date();
+                            name = name + $('#dataflow-viewer-missions').val() + '_';
+                            name = name + $('#dataflow-viewer-groups').val() + '_';
+                            name = name + formatDateTime(current_date);
+                            return name;
+                        },
                         exportOptions: {
                             columns: ':visible'
                         }
