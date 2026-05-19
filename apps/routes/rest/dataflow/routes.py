@@ -38,6 +38,10 @@ import apps.utils.db_utils as db_utils
 
 from apps.models.nosql.Graph import Graph
 from apps.routes.rest.dataflow import blueprint
+from apps.utils.word_document_generator import WordGenerator
+
+CURRENT_DATAFLOW_DOC_VERSION = "1.8"
+CURRENT_DATAFLOW_DOC_TEMPLATE = "apps/config/templates/dataflow/[EOF-DFC] EOF_CSC Sentinels Data Flow Configuration - Empty Template.docx"
 
 
 @blueprint.route('/rest/api/dataflow/<config_id>', methods=['GET'])
@@ -48,6 +52,50 @@ def get_dataflow(config_id):
         scen_graph = graph.find({'id': config_id})
         scen_graph = scen_graph[0]
         return Response(json.dumps(scen_graph, cls=db_utils.AlchemyEncoder), mimetype="application/json", status=200)
+    except Exception as ex:
+        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+
+
+def _generate_dataflow_doc_name():
+    """Generate Dataflow document name"""
+    from datetime import datetime
+
+    doc_name = (
+        "ESA-EOPG-EOPGC-TN-58 - CSC– ESA Operations Framework – Data Flow "
+        "Configuration - v{}_{}.docx".format(
+            CURRENT_DATAFLOW_DOC_VERSION,
+            datetime.now().strftime("%d/%m/%Y")
+        )
+    )
+
+    return doc_name
+
+@blueprint.route('/rest/api/dataflow/document/<config_id>', methods=['GET'])
+@login_required
+def create_dataflow_doc(config_id):
+    import io
+    from flask import send_file
+
+    doc = WordGenerator(CURRENT_DATAFLOW_DOC_TEMPLATE)
+
+    try:
+        graph = Graph()
+        scen_graph = graph.find({'id': config_id})
+        json_obj = json.loads(scen_graph[0]['graph'])['product_types']
+        
+        # TODO: Call function to modify doc to include scen_graph information
+
+        # save to in-memory buffer (no temp file needed)
+        buffer = io.BytesIO()
+        doc.document.save(buffer)
+        buffer.seek(0)
+
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=_generate_dataflow_doc_name(),
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
     except Exception as ex:
         return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
 

@@ -30,4 +30,5 @@ package-lock.json
 apps/static/assets/node_modules
 apps/static/assets/yarn.lock
 apps/static/assets/.temp
-
+*flask-atlantis-dark-pro/
+.vscode

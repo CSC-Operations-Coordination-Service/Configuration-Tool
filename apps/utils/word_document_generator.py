@@ -253,3 +253,7 @@ class WordGenerator:
             path + "/" + name + " - " + file_utils.get_date_for_file() + ".docx"
         )
         return path + "/" + name + " - " + file_utils.get_date_for_file() + ".docx"
+
+    @property
+    def document(self) -> docx.document.Document:
+        return self.__document
