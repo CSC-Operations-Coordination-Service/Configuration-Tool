@@ -123,19 +123,84 @@ class DataflowViewer {
                         exportOptions: {
                             columns: ':visible'
                         }
+                    },
+                    {
+                        text: '<i class="icon-docs"></i><span>&nbsp&nbspExport to Document</span>',
+                        action: function(e, dt, button, config) {
+                            const url = new URL(window.location);
+                            const configId = url.searchParams.get('id');
+
+                            // Disable the button immediately
+                            button.disable();
+
+                            // Optional: give visual feedback
+                            button.text('Generating...');
+
+                            var onSuccess = function(blob) {
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = 'document.docx';
+                                a.click();
+                                URL.revokeObjectURL(url);
+                            }
+
+                            var onFailure = function(xhr, status, error) {
+                                console.error('Document generation failed:', error);
+                            }
+
+                            // Can't use utils.ajaxCall as requests sent by 
+                            // that method have an 'application/json' content
+                            // type in the headers which can not be changed
+                            $.ajax({
+                                url: `/rest/api/dataflow/document/${configId}`,
+                                method: 'GET',
+                                xhrFields: {
+                                    responseType: 'blob'
+                                },
+                                async: true,
+                                success: function(blob, status, xhr) {
+                                    const disposition = xhr.getResponseHeader('Content-Disposition');
+                                    const filename = disposition.match(/filename="?([^"]+)"?/)[1];
+                                    const url = URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+
+                                    a.href = url;
+                                    a.download = filename;
+                                    a.click();
+                                    URL.revokeObjectURL(url);
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('Failed to download document:', error);
+                                },
+                                complete: function() {
+                                    button.enable();
+                                    button.text('Export to Document');
+                                }
+                            });
+
+
+                        },
+                        exportOptions: {
+                            columns: ':visible'
+                        }
                     }
                 ],
                 columnDefs: [
                 {
-                    targets: 0,
+                    targets: [0, 1],
                     visible: false
                 }]
             });
 
             // Customize Excel export button
             this.dataflowTable.buttons().container().appendTo( $('#action-toolbar'));
-            var expBtn = $('.dt-button').eq(0);
-            expBtn.addClass('btn btn-primary animate-up-2 float-right mr-2');
+
+            let nButtons = this.dataflowTable.buttons().length;
+            for (let idx = 0; idx < nButtons; idx++) {
+                var expBtn = $('.dt-button').eq(idx);
+                expBtn.addClass('btn btn-primary animate-up-2 float-right mr-2');
+            }
 
         } catch(err) {
             console.info('Initializing Dataflow Configuration table class - skipping table creation...')
@@ -147,6 +212,7 @@ class DataflowViewer {
         var configId = url.searchParams.get('id');
         var version = url.searchParams.get('version');
         var ajaxCallURL = '/rest/api/dataflow/' + configId;
+
         if (version) ajaxCallURL = '/rest/api/configurations/commit/' + configId + '/' + version;
         ajaxCall(ajaxCallURL, 'GET', {}, this.successLoadConfiguration, this.errorLoadConfiguration);
     }
