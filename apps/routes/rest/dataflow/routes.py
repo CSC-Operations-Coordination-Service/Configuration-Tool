@@ -38,10 +38,9 @@ import apps.utils.db_utils as db_utils
 
 from apps.models.nosql.Graph import Graph
 from apps.routes.rest.dataflow import blueprint
-from apps.utils.word_document_generator import WordGenerator
-
-CURRENT_DATAFLOW_DOC_VERSION = "1.8"
-CURRENT_DATAFLOW_DOC_TEMPLATE = "apps/config/templates/dataflow/[EOF-DFC] EOF_CSC Sentinels Data Flow Configuration - Empty Template.docx"
+from apps.utils.word_document_generator import (
+    write_products_to_empty_dataflow_doc, CURRENT_DATAFLOW_DOC_VERSION, WordGenerator
+)
 
 
 @blueprint.route('/rest/api/dataflow/<config_id>', methods=['GET'])
@@ -76,14 +75,12 @@ def create_dataflow_doc(config_id):
     import io
     from flask import send_file
 
-    doc = WordGenerator(CURRENT_DATAFLOW_DOC_TEMPLATE)
-
     try:
         graph = Graph()
         scen_graph = graph.find({'id': config_id})
-        json_obj = json.loads(scen_graph[0]['graph'])['product_types']
-        
-        # TODO: Call function to modify doc to include scen_graph information
+        json_objs = json.loads(scen_graph[0]['graph'])['product_types']
+
+        doc = write_products_to_empty_dataflow_doc(json_objs)
 
         # save to in-memory buffer (no temp file needed)
         buffer = io.BytesIO()
@@ -96,8 +93,8 @@ def create_dataflow_doc(config_id):
             download_name=_generate_dataflow_doc_name(),
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-    except Exception as ex:
-        return Response(json.dumps({'error': '500'}), mimetype="application/json", status=500)
+    except Exception as err:
+        return Response(json.dumps({'error': '500', 'message': err}), mimetype="application/json", status=500)
 
 
 @blueprint.route('/rest/api/dataflow', methods=['POST'])
