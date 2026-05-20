@@ -31,6 +31,7 @@ import json
 import logging
 import re
 import tempfile
+import sys
 
 from copy import deepcopy
 from dataclasses import dataclass
@@ -39,8 +40,12 @@ from functools import cmp_to_key
 from pathlib import Path
 from typing import (
     Callable, ClassVar, Dict, Iterable, Iterator, List, Optional, Tuple,
-    TypeAlias, TypedDict, Union
+    TypedDict, Union
 )
+if sys.version_info >= (3, 10):
+    from typing import TypeAlias
+else:
+    from typing_extensions import TypeAlias
 
 import docx
 import docx.document
@@ -54,7 +59,6 @@ from docx.table import _Cell
 from docx.text.paragraph import Paragraph
 from html4docx import HtmlToDocx
 
-import sys
 from pathlib import Path
 if str(Path(__file__).parent.parent.parent) not in sys.path:
     sys.path.append(str(Path(__file__).parent.parent.parent))
@@ -801,16 +805,32 @@ class DataflowDocTable:
 
             self.__html_parser.add_html_to_cell(new_value, cell)
             self._set_cell_font_size(cell, self.BODY_FONT_SIZE_PT, bold=False)
-            cell.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+            self._set_cell_vertical_alignment(cell, alignment='center')
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
             # Only merge with above if not a Service column
             if not isinstance(column, Service) and cell_above:
-                # Merge with cell above if sharing the same cell value
+                
                 if cell.text.strip() == cell_above.text.strip():
-                    cell.text = ""
+                    # Merge with cell above if sharing the same cell value
+
                     cell_above.merge(cell)
                     self._set_cell_font_size(cell_above, self.BODY_FONT_SIZE_PT, bold=False)
-                    cell_above.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                    self._set_cell_vertical_alignment(cell_above, alignment='center')
+                    for idx, paragraph in enumerate(cell_above.paragraphs):
+                        if idx != 0:
+                            # Clear all paragraphs from cell properly
+                            paragraph._element.getparent().remove(paragraph._element)
+                        else:
+                            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    def _set_cell_vertical_alignment(self, cell: docx.table._Cell, alignment: str = "center"):
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+        vAlign = OxmlElement('w:vAlign')
+        vAlign.set(qn('w:val'), alignment)
+        tcPr.append(vAlign)
 
     def _set_cell_font_size(self, cell, size_pt: float, bold: bool = False):
         """Sets font size for a specific cell"""
@@ -970,7 +990,8 @@ class Product:
             if mission.name == json_obj["mission"].strip():
                 break
         else:
-            raise ValueError(f"Mission '{json_obj["mission"].strip()}' not found")
+            mission = json_obj["mission"].strip()
+            raise ValueError(f"Mission '{mission}' not found")
 
         entities_relations = {}
         for relation in json_obj['entities_relations']:
