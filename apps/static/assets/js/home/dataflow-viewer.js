@@ -134,20 +134,17 @@ class DataflowViewer {
                             button.disable();
 
                             // Optional: give visual feedback
-                            button.text('Generating...');
+                            button.html('<i class="icon-docs"></i><span>&nbsp&nbspGenerating... 0%</span>');
 
-                            var onSuccess = function(blob) {
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = 'document.docx';
-                                a.click();
-                                URL.revokeObjectURL(url);
-                            }
+                            let progress = 0;
+                            const totalTime = 46000; // 46 seconds expected
+                            const interval = 500;    // update every 500ms
+                            const increment = 100 / (totalTime / interval); // % per tick
 
-                            var onFailure = function(xhr, status, error) {
-                                console.error('Document generation failed:', error);
-                            }
+                            const progressTimer = setInterval(function() {
+                                progress = Math.min(progress + increment, 99); // cap at 95% until complete
+                                button.html(`<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... ${Math.round(progress)}%</span>`);
+                            }, interval);
 
                             // Can't use utils.ajaxCall as requests sent by 
                             // that method have an 'application/json' content
@@ -160,6 +157,7 @@ class DataflowViewer {
                                 },
                                 async: true,
                                 success: function(blob, status, xhr) {
+                                    button.html(`<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... 100%</span>`);
                                     const disposition = xhr.getResponseHeader('Content-Disposition');
                                     const filename = disposition.match(/filename="?([^"]+)"?/)[1];
                                     const url = URL.createObjectURL(blob);
@@ -174,8 +172,9 @@ class DataflowViewer {
                                     console.error('Failed to download document:', error);
                                 },
                                 complete: function() {
+                                    clearInterval(progressTimer);
                                     button.enable();
-                                    button.text('Export to Document');
+                                    button.html('<i class="icon-docs"></i><span>&nbsp&nbspExport to Document</span>');
                                 }
                             });
 
