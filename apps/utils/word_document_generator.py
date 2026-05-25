@@ -55,6 +55,7 @@ from docx.enum.section import WD_ORIENTATION
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.oxml.table import CT_Tc
 from docx.shared import Inches
 from docx.table import _Cell
 from docx.text.paragraph import Paragraph
@@ -691,6 +692,24 @@ class DataflowDocTable:
     BODY_FONT_SIZE_PT: float = 9.0
     BOLD_HEADER: bool = True
     HEADER_FONT_SIZE_PT: float = 10.0
+    HEADER_BACKGROUND_COLOR = "e6e6e6"
+    COLUMN_COLOURS: Dict[Service, str] = {
+        Service.ADG: "e5b8b7",
+        Service.DA: "d6e3bc",
+        # Service.DATA_ACQUISITION: "ccc0d9",
+        Service.E2E: "e6e6e6",
+        Service.EDRS: "d6e3bc",
+        Service.EUM: "8db3e2",
+        Service.EXT: "c6d9f1",
+        Service.FOS: "bfbfbf",
+        Service.LTA: "ccc0d9",
+        Service.MP: "ffffcc",
+        Service.MPC: "daeef3",
+        Service.POD: "f2f2f2",
+        Service.PR: "fbd4b4",
+        Service.RS: "adadad",
+        Service.X_BAND: "e6e6e6",
+    }
     
     @dataclass    
     class CellChange:
@@ -741,6 +760,16 @@ class DataflowDocTable:
             raise ValueError(f"Final header row, '{', '.join(self.col_headers)}', not found")
 
         self._set_table_font_size()
+
+        tbl = self._table._tbl
+        rows = tbl.findall(qn('w:tr'))
+        for idx in self._header_row_indices:
+            tr = rows[idx]
+            for tc in tr.findall(qn('w:tc')):
+                self._set_cell_alignment(tc, 'center')
+                self._set_cell_vertical_alignment(tc, 'center')
+
+        self._set_table_borders(tbl)
 
     @staticmethod
     def parse_doc_entities_string(
@@ -970,12 +999,46 @@ class DataflowDocTable:
                         else:
                             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    def _set_cell_vertical_alignment(self, cell: docx.table._Cell, alignment: str = "center"):
-        tc = cell._tc
+            elif isinstance(column, Service):
+                self._set_cell_background(cell, self.COLUMN_COLOURS[column])
+
+    def _set_cell_vertical_alignment(self, cell: Union[docx.table._Cell, CT_Tc], alignment: str = "center"):        
+        if not isinstance(cell, (docx.table._Cell, CT_Tc)):
+            raise TypeError('Cell must be docx.table._Cell or docx.oxml.table.CT_Tc instance, not {type(cell)}')
+
+        tc = cell if isinstance(cell, CT_Tc) else cell._tc
         tcPr = tc.get_or_add_tcPr()
         vAlign = OxmlElement('w:vAlign')
         vAlign.set(qn('w:val'), alignment)
         tcPr.append(vAlign)
+
+    def _set_cell_alignment(self, tc: Union[docx.table._Cell, CT_Tc], alignment: str = 'center'):
+        """alignment: 'left', 'center', 'right'"""
+        if isinstance(tc, docx.table._Cell):
+            tc = tc._tc
+
+        for p in tc.findall(qn('w:p')):
+            pPr = p.find(qn('w:pPr'))
+            if pPr is None:
+                pPr = OxmlElement('w:pPr')
+                p.insert(0, pPr)
+            
+            jc = OxmlElement('w:jc')
+            jc.set(qn('w:val'), alignment)
+            pPr.append(jc)
+
+    def _set_cell_background(self, cell: Union[docx.table._Cell, CT_Tc], fill_hex: str):
+        if not isinstance(cell, (docx.table._Cell, CT_Tc)):
+            raise TypeError('Cell must be docx.table._Cell or docx.oxml.table.CT_Tc instance, not {type(cell)}')
+
+        tc = cell if isinstance(cell, CT_Tc) else cell._tc
+        tcPr = tc.get_or_add_tcPr()
+
+        shd = OxmlElement('w:shd')
+        shd.set(qn('w:val'), 'clear')
+        shd.set(qn('w:color'), 'auto')
+        shd.set(qn('w:fill'), fill_hex)
+        tcPr.append(shd)
 
     def _set_cell_font_size(self, cell, size_pt: float, bold: bool = False):
         """Sets font size for a specific cell"""
@@ -1013,6 +1076,33 @@ class DataflowDocTable:
                 self._set_cell_font_size(
                     cell, size_pt, bold=is_header_row and bold_header
                 )
+
+    def _set_table_borders(self, tbl, color='000000'):
+        tblPr = tbl.find(qn('w:tblPr'))
+        if tblPr is None:
+            tblPr = OxmlElement('w:tblPr')
+            tbl.insert(0, tblPr)
+
+        tblBorders = OxmlElement('w:tblBorders')
+        
+        border_config = {
+            'top':     {'sz': 12},  # 1.5pt
+            'bottom':  {'sz': 12},  # 1.5pt
+            'insideH': {'sz': 12},  # 1.5pt
+            'left':    {'sz': 8},   # 1pt
+            'right':   {'sz': 8},   # 1pt
+            'insideV': {'sz': 8},   # 1pt
+        }
+
+        for side, config in border_config.items():
+            border = OxmlElement(f'w:{side}')
+            border.set(qn('w:val'), 'single')
+            border.set(qn('w:sz'), str(config['sz']))
+            border.set(qn('w:color'), color)
+            border.set(qn('w:space'), '0')
+            tblBorders.append(border)
+
+        tblPr.append(tblBorders)
 
 
 @dataclass
