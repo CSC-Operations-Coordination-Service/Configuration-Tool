@@ -955,8 +955,9 @@ class DataflowDocTable:
 
             # Only merge with above if not a Service column
             if not isinstance(column, Service) and cell_above:
-
-                if cell.text.strip() == cell_above.text.strip():
+                cell_text = ''.join(t.text.strip() or '' for t in cell._tc.iter(qn('w:t')))
+                cell_above_text = ''.join(t.text.strip() or '' for t in cell_above._tc.iter(qn('w:t')))
+                if cell_text == cell_above_text:
                     # Merge with cell above if sharing the same cell value
                     cell_above.merge(cell)
                     self._set_cell_font_size(cell_above, self.BODY_FONT_SIZE_PT, bold=False)
@@ -966,8 +967,6 @@ class DataflowDocTable:
                         if idx != 0:
                             # Properly clear unnecessary paragraphs from newly merged cell
                             paragraph._element.getparent().remove(paragraph._element)
-                            if self._word_generator.tracking_changes:
-                                self._word_generator.insert_existing_runs(paragraph)
                         else:
                             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
