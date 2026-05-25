@@ -542,7 +542,7 @@ class WordGenerator:
                     current_level = heading_level
 
     @_track_changes_wrapper
-    def make_ins_run(self, paragraph, text, author=__file__):
+    def make_ins_run(self, paragraph, text, author=__author__):
         """
         Adds a run wrapped in <w:ins> so it appears as a tracked insertion, if
         tracking_changes is set to True
@@ -566,7 +566,7 @@ class WordGenerator:
         paragraph._p.append(ins)
 
     @_track_changes_wrapper
-    def insert_existing_runs(self, paragraph, author=__file__):
+    def insert_existing_runs(self, paragraph, author=__author__):
         """
         Marks all existing runs in a paragraph as tracked insertions, if
         tracking_changes is set to True
@@ -586,7 +586,7 @@ class WordGenerator:
             ins.append(r_elem)
 
     @_track_changes_wrapper
-    def delete_existing_runs(self, paragraph, author=__file__):
+    def delete_existing_runs(self, paragraph, author=__author__):
         """
         Marks all existing runs in a paragraph as tracked deletions, if
         tracking_changes is set to True
