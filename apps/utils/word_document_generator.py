@@ -35,6 +35,7 @@ import sys
 
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime as dt
 from enum import Enum
 from functools import cmp_to_key
 from pathlib import Path
@@ -188,15 +189,62 @@ class SectionContent(TypedDict):
     number: str  # Section number as a string e.g. 1.2.3
     tables: list[docx.table.Table]  # List of tables
 
+def _track_changes_wrapper(func):
+    """
+    Decorator for WordGenerator methods: skips execution if WordGenerator's
+    tracking_changes attribute is False.
+    """
+    from functools import wraps
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self.tracking_changes:
+            return
+        return func(self, *args, **kwargs)
+    return wrapper
+
 class WordGenerator:
-    def __init__(self, path_to_document=None):
+    """
+    Wrapper class for docx.document.Document
+    
+    Parameters
+    ----------
+    path_to_document: Optional[Union[str, Path]]
+        System path to the existing document, if needed
+
+    Attributes
+    ----------
+    doc_structure: dict[Tuple[str, ...], SectionContent]
+        A dictionary whose keys are tuples of section/sub-section headers and
+        values are a dict whose keys are 'number' and 'tables', whose values 
+        are a str representing section number e.g. 3.4.1, and a list of 
+        docx.table.Table instances of tables in that section, respectively
+
+    tracking_changes: bool
+        Whether to track changes or not. Default is True. If False, 
+        make_ins_run, insert_existing_runs, and delete_existing_runs methods
+        do nothing
+
+    __document: docx.document.Document
+        Wrapped docx.document.Document instance
+
+    __map: dict
+        Dictionary mapping to track added paragraphs, pictures, tables, and 
+        headings. TODO: Fold into doc_structure attribute
+
+    _current_track_change_id: int
+        The id of the latest track change
+    """
+    def __init__(self, path_to_document: Optional[Union[str, Path]] = None):
         self.doc_structure: dict[Tuple[str, ...], SectionContent] = {}
+        self.tracking_changes: bool = True
 
         self.__document: docx.document.Document = None
         self.__map = {}
-
         self.create(path_to_document)
         self._get_doc_structure()
+
+        self._current_track_change_id = self._get_most_recent_track_change_id()
 
     def create(self, path_to_document=None):
         """
@@ -419,13 +467,27 @@ class WordGenerator:
             return tuple(self.doc_structure[section]['tables'])
         return ()
 
+    def _get_most_recent_track_change_id(self) -> int:
+        """
+        Get the most recent id attribute value associated with tracked changes
+        in the document. Returns -1 if no track changes are present
+        """
+        body = self.document.element.body
+        track_changes_ids = {
+            int(el.get(qn('w:id')))
+            for el in body.iter()
+            if el.tag in (qn('w:ins'), qn('w:del'))
+            and el.get(qn('w:id')) is not None
+        }
+
+        return max(track_changes_ids) if len(track_changes_ids) > 0 else -1
+
     def _get_doc_structure(self):
         """
         Evaluates current document structure, and writes the results to 
         self.doc_structure
         """
         body = self.document.element.body
-
         current_level = 0
         current_nesting = []
         current_section = []
@@ -479,14 +541,88 @@ class WordGenerator:
                     }
                     current_level = heading_level
 
+    @_track_changes_wrapper
+    def make_ins_run(self, paragraph, text, author=__file__):
+        """
+        Adds a run wrapped in <w:ins> so it appears as a tracked insertion, if
+        tracking_changes is set to True
+        """
+        self._current_track_change_id += 1
+        ins = OxmlElement('w:ins')
+        ins.set(qn('w:id'), str(self._current_track_change_id))
+        ins.set(qn('w:author'), author)
+        ins.set(qn('w:date'), dt.now().strftime("%Y-%m-%dT%H:%M:%S"))
+
+        run = OxmlElement('w:r')
+        rPr = OxmlElement('w:rPr')
+        run.append(rPr)
+
+        t = OxmlElement('w:t')
+        t.text = text
+        t.set('{http://www.w3.org/XML/1998/namespace}space', 'preserve')
+        run.append(t)
+
+        ins.append(run)
+        paragraph._p.append(ins)
+
+    @_track_changes_wrapper
+    def insert_existing_runs(self, paragraph, author=__file__):
+        """
+        Marks all existing runs in a paragraph as tracked insertions, if
+        tracking_changes is set to True
+        """
+        date = dt.now().strftime("%Y-%m-%dT%H:%M:%S")
+        self._current_track_change_id += 1
+
+        for run in paragraph.runs:
+            r_elem = run._r
+
+            ins = OxmlElement('w:ins')
+            ins.set(qn('w:id'), str(self._current_track_change_id))
+            ins.set(qn('w:author'), author)
+            ins.set(qn('w:date'), date)
+
+            r_elem.getparent().replace(r_elem, ins)
+            ins.append(r_elem)
+
+    @_track_changes_wrapper
+    def delete_existing_runs(self, paragraph, author=__file__):
+        """
+        Marks all existing runs in a paragraph as tracked deletions, if
+        tracking_changes is set to True
+        """
+        date_str = dt.now().strftime("%Y-%m-%dT%H:%M:%S")
+        self._current_track_change_id += 1
+
+        for run in paragraph.runs:
+            r_elem = run._r
+
+            # Build the <w:del> wrapper
+            delete = OxmlElement('w:del')
+            delete.set(qn('w:id'), str(self._current_track_change_id))
+            delete.set(qn('w:author'), author)
+            delete.set(qn('w:date'), date_str)
+
+            # Replace <w:t> with <w:delText> inside the run
+            for t in r_elem.findall(qn('w:t')):
+                del_text = OxmlElement('w:delText')
+                del_text.text = t.text
+                del_text.set('{http://www.w3.org/XML/1998/namespace}space', 'preserve')
+                r_elem.replace(t, del_text)
+
+            # Swap the run out for the del-wrapped version
+            r_elem.getparent().replace(r_elem, delete)
+            delete.append(r_elem)
+
+
 class DataflowDocTable:
     """
     Class to represent a table in the Dataflow document (only) for a specific mission and group.
     
     Parameters
     ----------
-    docx_table: docx.table.Table
-        docx.table.Table instance of the document's table
+    word_generator: WordGenerator
+        WordGenerator instance containing the document
 
     mission: Mission
         Mission to which this table relates to
@@ -496,14 +632,18 @@ class DataflowDocTable:
 
     Attributes
     ----------
-    _table: docx.table.Table
-        docx.table.Table instance of the document's table
+    _word_generator: WordGenerator
+        WordGenerator instance containing the document
 
     _mission: Mission
         Mission to which this table relates to
 
     _group: Group
         Group to which this table relates to
+
+    _table: docx.table.Table
+        docx.table.Table instance of the document's table. Found by searching
+        _word_generator for the appropriate table
 
     _header_row_indices: List[int]
         Table row indices belonging to the table header. Evaluated once upon
@@ -558,7 +698,7 @@ class DataflowDocTable:
         old: str
         new: str
 
-    def __init__(self, docx_table: docx.table.Table, mission: Mission, group: Group):
+    def __init__(self, word_generator: WordGenerator, mission: Mission, group: Group):
         """
         Loads docx.table.Table and ensures all required headers are present in
         the last header row from the COLS_BY_MISSION_AND_GROUP mapping
@@ -569,9 +709,11 @@ class DataflowDocTable:
             If the correct headers from the COLS_BY_MISSION_AND_GROUP are not
             present
         """
-        self._table: docx.table.Table = docx_table
+        self._word_generator = word_generator
         self._mission: Mission = mission
         self._group: Group = group
+
+        self._table: docx.table.Table = self._word_generator.get_mission_group_table(mission, group)[0]
         self._header_row_indices: List[int] = []
         self._catalogue: ProductCatalogue = None
         self._catalogue_to_table_row_idx_mapping: Dict[CataloguePrimaryKey, int] = {}
@@ -725,11 +867,11 @@ class DataflowDocTable:
     def add_product_as_row(
         self,
         product: Union['Product', Iterable['Product']],
-        split_over_two_rows: bool = True,
-        add_to_catalogue: bool = True
+        _split_over_two_rows: bool = True,
+        _add_to_catalogue: bool = True,
     ) -> None:
         """
-        Adds a Product instance (or List/Tuple of Product instances) as row(s)
+        Adds a Product instance, or List/Tuple of Product instances, as row(s)
         in the table. Recurses if List/Tuple of Product instances
         
         Parameters
@@ -737,28 +879,27 @@ class DataflowDocTable:
         product: Product, Iterable[Product]
             Product(s) to add to the table
 
-        split_over_two_rows: bool
+        _split_over_two_rows: bool
             Whether to split the product over two rows e.g. the first for 
             producer entities, the last for consumer entities. Default is True
-        
-        add_to_catalogue: bool
+
+        _add_to_catalogue: bool
             Whether to add the product to self.catalogue. Default is True
         """
         if isinstance(product, Iterable):
             for product_ in product:
                 self.add_product_as_row(
                     product_,
-                    split_over_two_rows=split_over_two_rows,
-                    add_to_catalogue=add_to_catalogue
+                    _split_over_two_rows=_split_over_two_rows,
+                    _add_to_catalogue=_add_to_catalogue,
                 )
             return
 
-        if add_to_catalogue:
+        if _add_to_catalogue:
             self.catalogue.add_product(product)
 
-        # Check if product has consumers and therefore requires two rows in 
-        # the doc's table
-        if split_over_two_rows:
+        # Producers/consumers to be split over two rows
+        if _split_over_two_rows:
             producers_product = deepcopy(product)
             consumers_product = deepcopy(product)
 
@@ -769,8 +910,8 @@ class DataflowDocTable:
 
             self.add_product_as_row(
                 [producers_product, consumers_product],
-                split_over_two_rows=False,
-                add_to_catalogue=False
+                _split_over_two_rows=False,
+                _add_to_catalogue=False,
             )
             return
 
@@ -781,9 +922,10 @@ class DataflowDocTable:
         except IndexError:
             row_above_cells = None
 
+        # Write each column's values to the new row's appropriate cell
         for idx, column in enumerate(self.columns):
-            cell_above = row_above_cells[idx] if row_above_cells else None
             cell = new_row_cells[idx]
+            cell_above = row_above_cells[idx] if row_above_cells else None
 
             new_value = product[column]
             if new_value is None:
@@ -808,20 +950,24 @@ class DataflowDocTable:
             self._set_cell_vertical_alignment(cell, alignment='center')
             for paragraph in cell.paragraphs:
                 paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+                if self._word_generator.tracking_changes:
+                    self._word_generator.insert_existing_runs(paragraph)
 
             # Only merge with above if not a Service column
             if not isinstance(column, Service) and cell_above:
-                
+
                 if cell.text.strip() == cell_above.text.strip():
                     # Merge with cell above if sharing the same cell value
-
                     cell_above.merge(cell)
                     self._set_cell_font_size(cell_above, self.BODY_FONT_SIZE_PT, bold=False)
                     self._set_cell_vertical_alignment(cell_above, alignment='center')
+
                     for idx, paragraph in enumerate(cell_above.paragraphs):
                         if idx != 0:
-                            # Clear all paragraphs from cell properly
+                            # Properly clear unnecessary paragraphs from newly merged cell
                             paragraph._element.getparent().remove(paragraph._element)
+                            if self._word_generator.tracking_changes:
+                                self._word_generator.insert_existing_runs(paragraph)
                         else:
                             paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
@@ -1105,6 +1251,7 @@ class ProductCatalogue:
         self._products: List[Product] = []
         self._catalogue: Dict[Union[Column, Service], Product] = {}
         self._pk_func: CataloguePrimaryKeyFunc = pk_func
+        self.track_changes: bool = True
 
         if products is not None:
             for product in products:
@@ -1364,9 +1511,10 @@ def load_dataflow_json_to_catalogue(json_obj: List[Dict], logger: Optional[loggi
     return json_catalogue
 
 
-def write_products_to_empty_dataflow_doc(json_objs: List[Dict]) -> WordGenerator:
+def write_products_to_empty_dataflow_doc(json_objs: List[Dict], track_changes: bool = True) -> WordGenerator:
     json_catalogue = load_dataflow_json_to_catalogue(json_objs)
     template = WordGenerator(CURRENT_DATAFLOW_DOC_TEMPLATE)
+    template.tracking_changes = track_changes
 
     # Write in json_catalogue to empty template doc (which already has table headers)
     for mission in Mission:
@@ -1379,7 +1527,7 @@ def write_products_to_empty_dataflow_doc(json_objs: List[Dict]) -> WordGenerator
             if len(mission_group_doc_tables) == 0:
                 continue
 
-            mission_group_doc_table = DataflowDocTable(mission_group_doc_tables[0], mission, group)
+            mission_group_doc_table = DataflowDocTable(template, mission, group)
             products = db_mission_group_products.products
 
             def sort_key(prod: Product) -> str:
@@ -1407,7 +1555,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format='%(levelname)s: %(message)s')
     logger = logging.getLogger(__name__)
-
+    # test = WordGenerator("/mnt/c/Users/simon/OneDrive/S3TeamKnowledgebase/OCS/docs/[EOF-DFC] EOF_CSC Sentinels Data Flow Configuration 1.7.docx")
     def main():
         json_path = Path('/data/ocs/Configuration-Tool/apps/utils/assets/dataflow_data.json')
         with json_path.open(encoding='utf-8') as fd:
