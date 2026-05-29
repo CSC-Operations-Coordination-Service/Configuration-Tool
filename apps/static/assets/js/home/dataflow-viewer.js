@@ -20,6 +20,52 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+const exportDocument = function(button, isOfficial) {
+    console.log('exportDocument called with args: ', button, isOfficial)
+    const configId = new URL(window.location).searchParams.get('id');
+
+    button.disable();
+    // button.html('<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... 0%</span>');
+    // button.text = `Generating...`;
+
+    let progress = 0;
+    const totalTime = 53000;
+    const interval = 500;
+    const increment = 100 / (totalTime / interval);
+
+    const progressTimer = setInterval(function() {
+        progress = Math.min(progress + increment, 99);
+        button.html(`<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... ${Math.round(progress)}%</span>`);
+    }, interval);
+
+    $.ajax({
+        url: `/rest/api/dataflow/document/${configId}`,
+        method: 'GET',
+        data: { official: isOfficial ? 'true' : 'false' },
+        xhrFields: { responseType: 'blob' },
+        async: true,
+        success: function(blob, status, xhr) {
+            button.html('<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... 100%</span>');
+            const disposition = xhr.getResponseHeader('Content-Disposition');
+            const filename = disposition.match(/filename="?([^"]+)"?/)[1];
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+        error: function(xhr, status, error) {
+            console.error('Failed to download document:', error);
+        },
+        complete: function() {
+            clearInterval(progressTimer);
+            button.enable();
+            button.html('<i class="icon-docs"></i><span>&nbsp;&nbsp;Export to Document</span>');
+        }
+    });
+};
+
 class DataflowViewer {
 
     constructor() {
@@ -42,9 +88,11 @@ class DataflowViewer {
     }
 
     init() {
-
         // Init the version selector panel
         initVersionSelector();
+
+        // Link up the dataflow doc official/unofficial buttons to the exportDocument function above
+        this.initDocumentExportButtons();
 
         // Init the dropdown menus permitting to select the Dataflow configuration
         this.initDataflowConfigurationSelectors();
@@ -54,7 +102,6 @@ class DataflowViewer {
 
         // Load the Dataflow configuration
         this.loadDataflow();
-
     }
 
     initDataflowConfigurationSelectors() {
@@ -124,66 +171,6 @@ class DataflowViewer {
                             columns: ':visible'
                         }
                     },
-                    {
-                        text: '<i class="icon-docs"></i><span>&nbsp&nbspExport to Document</span>',
-                        action: function(e, dt, button, config) {
-                            const url = new URL(window.location);
-                            const configId = url.searchParams.get('id');
-
-                            // Disable the button immediately
-                            button.disable();
-
-                            // Optional: give visual feedback
-                            button.html('<i class="icon-docs"></i><span>&nbsp&nbspGenerating... 0%</span>');
-
-                            let progress = 0;
-                            const totalTime = 46000; // 46 seconds expected
-                            const interval = 500;    // update every 500ms
-                            const increment = 100 / (totalTime / interval); // % per tick
-
-                            const progressTimer = setInterval(function() {
-                                progress = Math.min(progress + increment, 99); // cap at 95% until complete
-                                button.html(`<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... ${Math.round(progress)}%</span>`);
-                            }, interval);
-
-                            // Can't use utils.ajaxCall as requests sent by 
-                            // that method have an 'application/json' content
-                            // type in the headers which can not be changed
-                            $.ajax({
-                                url: `/rest/api/dataflow/document/${configId}`,
-                                method: 'GET',
-                                xhrFields: {
-                                    responseType: 'blob'
-                                },
-                                async: true,
-                                success: function(blob, status, xhr) {
-                                    button.html(`<i class="icon-docs"></i><span>&nbsp;&nbsp;Generating... 100%</span>`);
-                                    const disposition = xhr.getResponseHeader('Content-Disposition');
-                                    const filename = disposition.match(/filename="?([^"]+)"?/)[1];
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-
-                                    a.href = url;
-                                    a.download = filename;
-                                    a.click();
-                                    URL.revokeObjectURL(url);
-                                },
-                                error: function(xhr, status, error) {
-                                    console.error('Failed to download document:', error);
-                                },
-                                complete: function() {
-                                    clearInterval(progressTimer);
-                                    button.enable();
-                                    button.html('<i class="icon-docs"></i><span>&nbsp&nbspExport to Document</span>');
-                                }
-                            });
-
-
-                        },
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    }
                 ],
                 columnDefs: [
                 {
@@ -204,6 +191,19 @@ class DataflowViewer {
         } catch(err) {
             console.info('Initializing Dataflow Configuration table class - skipping table creation...')
         }
+    }
+
+    initDocumentExportButtons() {
+        const $button = $('#export-dataflow-doc-button');
+        $('#export-official').on('click', (e) => {
+            e.preventDefault();
+            exportDocument($button, true);
+        });
+
+        $('#export-unofficial').on('click', (e) => {
+            e.preventDefault();
+            exportDocument($button, false);
+        });
     }
 
     loadDataflow() {
