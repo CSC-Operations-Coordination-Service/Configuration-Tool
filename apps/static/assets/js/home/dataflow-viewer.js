@@ -39,7 +39,7 @@ const exportDocument = function(button, isOfficial) {
     }, interval);
 
     $.ajax({
-        url: `/rest/api/dataflow/document/${configId}`,
+        url: `/rest/api/dataflow/document`,
         method: 'GET',
         data: { official: isOfficial ? 'true' : 'false' },
         xhrFields: { responseType: 'blob' },

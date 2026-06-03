@@ -74,6 +74,13 @@ def configure_s3_client(app):
             region_name=app.config['S3_REGION']
         )
 
+def initialise_dataflow_doc_generator(app):
+    from apps.utils.word_document_generator import DataflowDocCreator
+    
+    app.dataflow_doc_creator = DataflowDocCreator(app)
+    # FIXME: Following is hard-coded value of config_id (acts as default)
+    app.dataflow_doc_creator.config_id = "627ad268_ce8c_11ef_8a52_514642c42857"
+
 def start_scheduler(app):
     def schedule_process():
         import schedule
@@ -146,6 +153,8 @@ def create_app(configuration):
     print("Configuring S3 client...")
     configure_s3_client(app)
     print("Starting Scheduler ...")
+    initialise_dataflow_doc_generator(app)
+    print("Initialising Dataflow Document Generator ...")
     start_scheduler(app)
     print("Configuration Tool successfully started")
     return app

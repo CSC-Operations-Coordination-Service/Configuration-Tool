@@ -27,11 +27,14 @@ __license__ = "GPLv3"
 __status__ = "Production"
 __version__ = "1.0.0"
 
+import flask
 import json
 import logging
+import io
 import re
-import tempfile
 import sys
+import tempfile
+import threading
 
 from copy import deepcopy
 from dataclasses import dataclass
@@ -43,6 +46,7 @@ from typing import (
     Callable, ClassVar, Dict, Iterable, Iterator, List, Optional, Tuple,
     TypedDict, Union
 )
+
 if sys.version_info >= (3, 10):
     from typing import TypeAlias
 else:
@@ -1426,6 +1430,141 @@ class ProductCatalogue:
         as a list of Products
         """
         return list(filter(lambda product: search_term.search(product[column]), self.products))
+
+class DataflowDocCreator:
+    """
+    Singleton responsible for dataflow document creation across the app
+    """
+    _instance = None
+    _instance_lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs) -> 'DataflowDocCreator':
+        with cls._instance_lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._initialised = False
+        return cls._instance
+
+    def __init__(self, app: flask.app.Flask):
+        if self._initialised:
+            return
+
+        self._app = app
+        self._lock = threading.Lock()
+        self._stop_event = threading.Event()
+        self._thread = None
+        self._initialised = True
+
+        self.track_changes = True
+        self.config_id = None
+
+    @property
+    def logger(self) -> logging.Logger:
+        return self._app.logger
+
+    def trigger(self):
+        if self.config_id is None:
+            raise ValueError("Set config_id before running")
+
+        with self._lock:
+            # Cancel any running job
+            if self._thread and self._thread.is_alive():
+                self.logger.info("Interrupting existing document creation job")
+                self._stop_event.set()
+                self._thread.join()  # wait for clean exit
+
+            # Reset and launch fresh
+            self._stop_event.clear()
+            self._thread = threading.Thread(
+                target=self._run,
+                daemon=True
+            )
+            self._thread.start()
+
+    def _run(self):
+        try:
+            unofficial_doc_buffer = self._create_document(official=False)
+            official_doc_buffer = self._create_document(official=True)
+
+            if self._stop_event.is_set():
+                return
+
+        except Exception as err:
+            self.logger.exception(f"Document creation failed: {err}")
+
+        self._upload_to_s3(unofficial_doc_buffer, official=False)
+        self._upload_to_s3(official_doc_buffer, official=True)
+
+    def _create_document(self, official: bool = False) -> io.BytesIO:
+        from apps.models.nosql.Graph import Graph
+
+        graph = Graph()
+        scen_graph = graph.find({'id': self.config_id})
+        json_objs = json.loads(scen_graph[0]['graph'])['product_types']
+
+        json_catalogue = load_dataflow_json_to_catalogue(json_objs)
+        template = WordGenerator(CURRENT_DATAFLOW_DOC_TEMPLATE)
+        template.tracking_changes = self.track_changes
+
+        # Write in json_catalogue to empty template doc (which already has table headers)
+        for mission in Mission:
+            for group in Group:
+                # If stop event has been triggered, terminate the document creation
+                if self._stop_event.is_set():
+                    return
+
+                db_mission_group_products = json_catalogue.get_mission_and_group_products(mission, group)
+                if len(db_mission_group_products.products) == 0:
+                    continue
+
+                mission_group_doc_tables = template.get_mission_group_table(mission, group)
+                if len(mission_group_doc_tables) == 0:
+                    continue
+
+                mission_group_doc_table = DataflowDocTable(template, mission, group)
+                products = db_mission_group_products.products
+
+                def sort_key(prod: Product) -> str:
+                    key = ""
+                    for col in mission_group_doc_table.columns:
+                        val = prod[col]
+
+                        if issubclass(val.__class__, Enum):
+                            val = val.value
+
+                        key += str(val)
+
+                    return key
+
+                products.sort(key=sort_key)
+                for product in db_mission_group_products.products:
+                    mission_group_doc_table.add_product_as_row(product)
+
+        buffer = io.BytesIO()
+        template.document.save(buffer)
+        buffer.seek(0)
+
+        return buffer
+
+    def _upload_to_s3(self, doc_buffer: io.BytesIO, official: bool = False):
+        from apps import s3_client
+
+        s3_obj_key = self._app.config['S3_DATAFLOW_DOC_OFFICIAL_KEY'] if official else self._app.config['S3_DATAFLOW_DOC_UNOFFICIAL_KEY']
+        s3_bucket = self._app.config['S3_BUCKET']
+        doc_type_str = "official" if official else "unofficial"
+
+        try:
+            s3_client.put_object(
+                Body=doc_buffer,
+                Bucket=s3_bucket,
+                Key=s3_obj_key
+            )
+
+            
+            self.logger.info(f"Successfully uploaded {doc_type_str} doc to {s3_obj_key} in {s3_bucket} bucket")
+
+        except Exception as err:
+            self.logger.error(f"Could not upload {doc_type_str} doc to {s3_obj_key} in {s3_bucket} bucket: {err}")
 
 # endregion
 # ########################################################################### #

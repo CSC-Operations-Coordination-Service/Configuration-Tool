@@ -29,18 +29,50 @@ __version__ = "1.0.0"
 
 import json
 
-from flask import Response
+from flask import Response, current_app
 from flask import request
 from flask_login import login_required
+from flask.typing import ResponseReturnValue
+from typing import Callable, TypeVar
 
 import apps.utils.auth_utils as auth_utils
 import apps.utils.db_utils as db_utils
 
 from apps.models.nosql.Graph import Graph
 from apps.routes.rest.dataflow import blueprint
-from apps.utils.word_document_generator import (
-    write_products_to_empty_dataflow_doc, CURRENT_DATAFLOW_DOC_VERSION, WordGenerator
-)
+from apps.utils.word_document_generator import CURRENT_DATAFLOW_DOC_VERSION
+
+DEFAULT_DATAFLOW_CONFIG_ID = "627ad268_ce8c_11ef_8a52_514642c42857"
+
+FlaskRoute = TypeVar('FlaskRoute', bound=Callable[..., ResponseReturnValue])
+def triggers_dataflow_doc_creation(f: FlaskRoute):
+    """
+    Trigger Dataflow Document creation on successful Response returned from
+    wrapped function. Reads request's data/body and assigns config_id to
+    DataflowDocCreator Singleton
+    """
+    import functools
+    from flask import current_app
+
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        response = f(*args, **kwargs)
+        if response.status_code < 300:
+            try:
+                try:
+                    request_data = json.loads(request.data.decode('utf-8'))
+                except json.decoder.JSONDecodeError:
+                    request_data = {}
+                config_id = request_data.get('config_id', DEFAULT_DATAFLOW_CONFIG_ID)
+
+                current_app.dataflow_doc_creator.config_id = config_id
+                current_app.dataflow_doc_creator.trigger()
+
+            except Exception as err:
+                current_app.logger.error(f"Can not create new document: {err}")
+        return response
+
+    return decorated
 
 
 @blueprint.route('/rest/api/dataflow/<config_id>', methods=['GET'])
@@ -60,7 +92,7 @@ def _generate_dataflow_doc_name():
     from datetime import datetime
 
     doc_name = (
-        "ESA-EOPG-EOPGC-TN-58 - CSC– ESA Operations Framework – Data Flow "
+        "ESA-EOPG-EOPGC-TN-58 - CSC- ESA Operations Framework - Data Flow "
         "Configuration - v{}_{}.docx".format(
             CURRENT_DATAFLOW_DOC_VERSION,
             datetime.now().strftime("%d/%m/%Y")
@@ -69,22 +101,31 @@ def _generate_dataflow_doc_name():
 
     return doc_name
 
-@blueprint.route('/rest/api/dataflow/document/<config_id>', methods=['GET'])
+
+@blueprint.route('/rest/api/dataflow/document', methods=['GET'])
+@triggers_dataflow_doc_creation
 @login_required
-def create_dataflow_doc(config_id):
+def get_dataflow_doc():
+    """
+    Create a dataflow document.
+
+    Query Parameters:
+        official (str): Whether to create the official document. One of: 
+        'true', or 'false'. Defaults to 'false'.
+    """
     import io
-    from flask import send_file
+    from flask import current_app, send_file
+    from apps import s3_client
+
+    get_official_doc = request.args.get('official', 'false').lower() == 'true'
 
     try:
-        graph = Graph()
-        scen_graph = graph.find({'id': config_id})
-        json_objs = json.loads(scen_graph[0]['graph'])['product_types']
-
-        doc = write_products_to_empty_dataflow_doc(json_objs)
-
-        # save to in-memory buffer (no temp file needed)
         buffer = io.BytesIO()
-        doc.document.save(buffer)
+        s3_client.download_fileobj(
+            Bucket=current_app.config['S3_BUCKET'],
+            Key=current_app.config["S3_DATAFLOW_DOC_OFFICIAL_KEY" if get_official_doc else "S3_DATAFLOW_DOC_UNOFFICIAL_KEY"],
+            Fileobj=buffer
+        )
         buffer.seek(0)
 
         return send_file(
@@ -93,11 +134,13 @@ def create_dataflow_doc(config_id):
             download_name=_generate_dataflow_doc_name(),
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
+
     except Exception as err:
         return Response(json.dumps({'error': '500', 'message': err}), mimetype="application/json", status=500)
 
 
 @blueprint.route('/rest/api/dataflow', methods=['POST'])
+@triggers_dataflow_doc_creation
 @login_required
 def add_product_type():
     """
@@ -153,6 +196,7 @@ def add_product_type():
 
 
 @blueprint.route('/rest/api/dataflow', methods=['PUT'])
+@triggers_dataflow_doc_creation
 @login_required
 def update_product_type():
     """
@@ -204,6 +248,7 @@ def update_product_type():
 
 
 @blueprint.route('/rest/api/dataflow', methods=['DELETE'])
+@triggers_dataflow_doc_creation
 @login_required
 def delete_product_type():
     """
