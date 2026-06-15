@@ -103,7 +103,6 @@ def _generate_dataflow_doc_name():
 
 
 @blueprint.route('/rest/api/dataflow/document', methods=['GET'])
-@triggers_dataflow_doc_creation
 @login_required
 def get_dataflow_doc():
     """

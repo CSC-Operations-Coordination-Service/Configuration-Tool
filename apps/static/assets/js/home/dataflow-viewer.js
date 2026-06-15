@@ -79,7 +79,7 @@ class DataflowViewer {
                 'S5P': 'Sentinel-5P',
                 'S6': 'Sentinel-6'};
 
-        this.groups = ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports', 'Removed Products', 'Removed AUX Data'];
+        this.groups = ['Products', 'AUX Data', 'MP and FOS files', 'OLQC Reports', 'Removed Products', 'Removed AUX Data', 'Removed MP and FOS files'];
 
         this.entities = ['PR', 'FOS', 'MP', 'ADG', 'E2E', 'MPC', 'LTA', 'DA', 'EUM', 'EXT', 'RS', 'POD', 'EDRS', 'X-Band'];
 
@@ -211,7 +211,6 @@ class DataflowViewer {
         var configId = url.searchParams.get('id');
         var version = url.searchParams.get('version');
         var ajaxCallURL = '/rest/api/dataflow/' + configId;
-
         if (version) ajaxCallURL = '/rest/api/configurations/commit/' + configId + '/' + version;
         ajaxCall(ajaxCallURL, 'GET', {}, this.successLoadConfiguration, this.errorLoadConfiguration);
     }
