@@ -740,6 +740,7 @@ class DataflowDocTable:
         self._header_row_indices: List[int] = []
         self._catalogue: ProductCatalogue = None
         self._catalogue_to_table_row_idx_mapping: Dict[CataloguePrimaryKey, int] = {}
+        self._row_note_numbers: Dict[Tuple[int, int], Tuple[int, ...]] = {}
 
         # Non-implemented attributes. For future data comparison logic
         self._change_history: List[DataflowDocTable.CellChange] = []
@@ -902,6 +903,7 @@ class DataflowDocTable:
         product: Union['Product', Iterable['Product']],
         _split_over_two_rows: bool = True,
         _add_to_catalogue: bool = True,
+        note_numbers_by_column: Optional[Dict[Union['Column', 'Service'], List[int]]] = None,
     ) -> None:
         """
         Adds a Product instance, or List/Tuple of Product instances, as row(s)
@@ -925,6 +927,7 @@ class DataflowDocTable:
                     product_,
                     _split_over_two_rows=_split_over_two_rows,
                     _add_to_catalogue=_add_to_catalogue,
+                    note_numbers_by_column=note_numbers_by_column,
                 )
             return
 
@@ -942,14 +945,23 @@ class DataflowDocTable:
                 consumers_product[service] = tuple(e for e in consumers_product[service] if e in CONSUMER_ENTITIES)
 
             self.add_product_as_row(
-                [producers_product, consumers_product],
+                producers_product,
                 _split_over_two_rows=False,
                 _add_to_catalogue=False,
+                note_numbers_by_column=note_numbers_by_column,
+            )
+            self.add_product_as_row(
+                consumers_product,
+                _split_over_two_rows=False,
+                _add_to_catalogue=False,
+                note_numbers_by_column=None,
             )
             return
 
         # Cache to avoid overheads
         new_row_cells = self._table.add_row().cells
+        new_row_idx = len(self._table.rows) - 1
+        row_above_idx = new_row_idx - 1
         try:
             row_above_cells = self._table.rows[-2].cells
         except IndexError:
@@ -959,6 +971,10 @@ class DataflowDocTable:
         for idx, column in enumerate(self.columns):
             cell = new_row_cells[idx]
             cell_above = row_above_cells[idx] if row_above_cells else None
+            note_numbers = []
+            if note_numbers_by_column and column in note_numbers_by_column:
+                note_numbers = list(note_numbers_by_column[column])
+            note_key = tuple(note_numbers)
 
             new_value = product[column]
             if new_value is None:
@@ -987,14 +1003,21 @@ class DataflowDocTable:
                     self._word_generator.insert_existing_runs(paragraph)
 
             # Only merge with above if not a Service column
+            merged_with_above = False
+            target_cell = cell
+            target_row_idx = new_row_idx
             if not isinstance(column, Service) and cell_above:
                 cell_text = ''.join(t.text.strip() or '' for t in cell._tc.iter(qn('w:t')))
                 cell_above_text = ''.join(t.text.strip() or '' for t in cell_above._tc.iter(qn('w:t')))
-                if cell_text == cell_above_text:
+                cell_above_note_key = self._row_note_numbers.get((row_above_idx, idx), tuple())
+                if cell_text == cell_above_text and cell_above_note_key == note_key:
                     # Merge with cell above if sharing the same cell value
                     cell_above.merge(cell)
                     self._set_cell_font_size(cell_above, self.BODY_FONT_SIZE_PT, bold=False)
                     self._set_cell_vertical_alignment(cell_above, alignment='center')
+                    target_cell = cell_above
+                    target_row_idx = row_above_idx
+                    merged_with_above = True
 
                     for idx, paragraph in enumerate(cell_above.paragraphs):
                         if idx != 0:
@@ -1005,6 +1028,53 @@ class DataflowDocTable:
 
             elif isinstance(column, Service):
                 self._set_cell_background(cell, self.COLUMN_COLOURS[column])
+
+            if note_numbers and not merged_with_above:
+                self._append_note_references(target_cell, note_numbers)
+
+            self._row_note_numbers[(target_row_idx, idx)] = note_key
+
+    def _append_note_references(self, cell: _Cell, note_numbers: List[int]):
+        if not note_numbers:
+            return
+
+        paragraph = cell.paragraphs[-1] if cell.paragraphs else cell.add_paragraph('')
+        note_run = paragraph.add_run(','.join([str(num) for num in note_numbers]))
+        note_run.font.superscript = True
+
+    def add_header_note_references(self, note_numbers_by_column: Dict[Union['Column', 'Service'], List[int]]):
+        if not note_numbers_by_column:
+            return
+
+        header_cells = self._table.rows[self._header_row_indices[-1]].cells
+        for idx, column in enumerate(self.columns):
+            numbers = note_numbers_by_column.get(column, [])
+            if numbers:
+                self._append_note_references(header_cells[idx], numbers)
+
+    def append_notes_below_table(self, ordered_notes: List[Tuple[int, str]]):
+        if not ordered_notes:
+            return
+
+        from docx.shared import Pt
+
+        anchor = self._table._tbl
+        notes_title = OxmlElement('w:p')
+        anchor.addnext(notes_title)
+        title_paragraph = Paragraph(notes_title, self._table._parent)
+        title_run = title_paragraph.add_run('Notes:')
+        title_run.bold = True
+        title_run.font.size = Pt(9)
+
+        anchor = notes_title
+        for number, text in ordered_notes:
+            note_paragraph = OxmlElement('w:p')
+            anchor.addnext(note_paragraph)
+            paragraph = Paragraph(note_paragraph, self._table._parent)
+            note_run = paragraph.add_run(f"{number}. {text}")
+            note_run.font.size = Pt(8)
+            note_run.font.italic = True
+            anchor = note_paragraph
 
     def _set_cell_vertical_alignment(self, cell: Union[docx.table._Cell, CT_Tc], alignment: str = "center"):        
         if not isinstance(cell, (docx.table._Cell, CT_Tc)):
@@ -1431,6 +1501,295 @@ class ProductCatalogue:
         """
         return list(filter(lambda product: search_term.search(product[column]), self.products))
 
+
+class DataflowNoteResolver:
+    """Resolve table/header notes using the same matching model as frontend."""
+
+    _MISSION_NAMES: Dict[str, str] = {
+        'S1': 'Sentinel-1',
+        'S2': 'Sentinel-2',
+        'S3': 'Sentinel-3',
+        'S5P': 'Sentinel-5P',
+        'S6': 'Sentinel-6',
+    }
+
+    _ENTITIES: Tuple[str, ...] = (
+        'PR', 'FOS', 'MP', 'ADG', 'E2E', 'MPC', 'LTA',
+        'DA', 'EUM', 'EXT', 'RS', 'POD', 'EDRS', 'X-Band'
+    )
+
+    def __init__(self, notes: Optional[List[Dict]] = None):
+        self.notes = notes or []
+        self._matcher_cache: Dict[str, Callable[[str], bool]] = {}
+
+    @staticmethod
+    def _is_truthy_note_text(text: Optional[str]) -> bool:
+        return bool(text and str(text).strip())
+
+    def _get_mission_key_from_value(self, mission_value: Optional[str]) -> Optional[str]:
+        if not mission_value:
+            return None
+        if mission_value in self._MISSION_NAMES:
+            return mission_value
+        for mission_key, mission_name in self._MISSION_NAMES.items():
+            if mission_name == mission_value:
+                return mission_key
+        return None
+
+    def _compile_matcher(self, raw_pattern: Optional[str]) -> Callable[[str], bool]:
+        pattern = str(raw_pattern or '').strip()
+        if not pattern:
+            return lambda _candidate: False
+
+        if pattern in self._matcher_cache:
+            return self._matcher_cache[pattern]
+
+        matcher: Callable[[str], bool]
+        regex_literal = re.match(r'^/(.*)/([gimsuy]*)$', pattern)
+
+        if regex_literal:
+            try:
+                compiled_literal = re.compile(regex_literal.group(1), re.IGNORECASE)
+                matcher = lambda candidate: bool(compiled_literal.search(str(candidate or '').strip()))
+            except re.error:
+                matcher = lambda candidate: str(candidate or '').strip().lower() == pattern.lower()
+        else:
+            translated = pattern
+            translated = re.sub(r'\[(\d+)\.\.(\d+)\]', r'__RANGE__\1__\2__', translated)
+            translated = re.escape(translated)
+            translated = translated.replace(r'\*', '.*').replace(r'\?', '.')
+            translated = re.sub(r'__RANGE__(\d+)__(\d+)__', r'[\1-\2]', translated)
+            compiled = re.compile(r'^' + translated + r'$', re.IGNORECASE)
+            matcher = lambda candidate: bool(compiled.search(str(candidate or '').strip()))
+
+        self._matcher_cache[pattern] = matcher
+        return matcher
+
+    def _is_value_match(self, pattern: Optional[str], candidate: Optional[str]) -> bool:
+        candidate_string = str(candidate or '').strip()
+        pattern_string = str(pattern or '').strip()
+        if not candidate_string or not pattern_string:
+            return False
+        if candidate_string.lower() == pattern_string.lower():
+            return True
+        matcher = self._compile_matcher(pattern_string)
+        return matcher(candidate_string)
+
+    def _is_context_match(self, note: Dict, selected_mission: str, selected_configuration: str) -> bool:
+        if note.get('group') and note.get('group') != selected_configuration:
+            return False
+        matching_condition = note.get('matching_condition', {})
+        mission = matching_condition.get('mission')
+        if not mission:
+            return True
+        note_mission_key = self._get_mission_key_from_value(mission)
+        return note_mission_key == selected_mission if note_mission_key else mission == selected_mission
+
+    def _is_row_match(self, note: Dict, product_json: Dict) -> bool:
+        matching_condition = note.get('matching_condition', {})
+        if matching_condition.get('product_type') and not self._is_value_match(matching_condition.get('product_type'), product_json.get('name')):
+            return False
+        if matching_condition.get('level') and not self._is_value_match(matching_condition.get('level'), product_json.get('level')):
+            return False
+        if matching_condition.get('instrument') and not self._is_value_match(matching_condition.get('instrument'), product_json.get('payload')):
+            return False
+        return True
+
+    @staticmethod
+    def _get_column_selector(note: Dict) -> Optional[Dict[str, str]]:
+        selector = note.get('column_selector')
+        if not selector:
+            return None
+        if isinstance(selector, str):
+            return {'column': selector, 'value': ''}
+        if isinstance(selector, dict):
+            return {
+                'column': selector.get('column', ''),
+                'value': selector.get('value', ''),
+            }
+        return None
+
+    def _get_relation_value(self, product_json: Dict, entity_key: str) -> str:
+        relationships = product_json.get('entities_relations', []) or []
+        for relation in relationships:
+            relation_entity = relation.split(':')[0]
+            if relation_entity == entity_key:
+                return relation.split(':')[1] if ':' in relation else ''
+        return ''
+
+    def _get_column_raw_value(self, product_json: Dict, column_key: str) -> str:
+        if column_key == 'name':
+            return product_json.get('name', '')
+        if column_key == 'payload':
+            return product_json.get('payload', '')
+        if column_key == 'level':
+            return product_json.get('level', '')
+        if column_key == 'sensor-mode':
+            return product_json.get('sensor-mode', '')
+        if column_key == 'type':
+            return product_json.get('type', '')
+        if column_key == 'description':
+            return product_json.get('description', '')
+        if column_key in self._ENTITIES:
+            return self._get_relation_value(product_json, column_key)
+        return ''
+
+    def get_cell_note_texts(self, product_json: Dict, column_key: str, selected_mission: str, selected_configuration: str) -> List[str]:
+        matched: List[str] = []
+        for note in self.notes:
+            if note.get('target_type') != 'cell':
+                continue
+            if not self._is_context_match(note, selected_mission, selected_configuration):
+                continue
+            if not self._is_row_match(note, product_json):
+                continue
+
+            selector = self._get_column_selector(note)
+            if not selector or selector.get('column') != column_key:
+                continue
+
+            column_value = self._get_column_raw_value(product_json, column_key)
+            selector_value = selector.get('value')
+            if not selector_value or self._is_value_match(selector_value, column_value):
+                text = (note.get('text') or '').strip()
+                if self._is_truthy_note_text(text):
+                    matched.append(text)
+        return matched
+
+    def get_header_note_texts(self, column_key: str, selected_mission: str, selected_configuration: str) -> List[str]:
+        matched: List[str] = []
+        for note in self.notes:
+            if note.get('target_type') != 'header':
+                continue
+            if not self._is_context_match(note, selected_mission, selected_configuration):
+                continue
+
+            selector = self._get_column_selector(note)
+            if selector and selector.get('column') == column_key:
+                text = (note.get('text') or '').strip()
+                if self._is_truthy_note_text(text):
+                    matched.append(text)
+        return matched
+
+
+def _column_to_note_key(column: Union[Column, Service]) -> str:
+    mapping = {
+        Column.PRODUCT_TYPE: 'name',
+        Column.PAYLOAD: 'payload',
+        Column.LEVEL: 'level',
+        Column.MODE: 'sensor-mode',
+        Column.TYPE: 'type',
+        Column.DESCRIPTION: 'description',
+    }
+    if isinstance(column, Column):
+        return mapping[column]
+    return column.value
+
+
+def _build_dataflow_document_buffer(
+    config_id: str,
+    track_changes: bool = True,
+    stop_event: Optional[threading.Event] = None,
+) -> io.BytesIO:
+    from apps.models.nosql.Graph import Graph
+
+    graph = Graph()
+    scen_graph = graph.find({'id': config_id})
+    if not scen_graph:
+        raise ValueError(f"Dataflow configuration not found for id '{config_id}'")
+
+    graph_json = json.loads(scen_graph[0]['graph'])
+    json_objs = graph_json.get('product_types', [])
+    footnotes = graph_json.get('footnotes', []) or []
+
+    json_catalogue = load_dataflow_json_to_catalogue(json_objs)
+    template = WordGenerator(CURRENT_DATAFLOW_DOC_TEMPLATE)
+    template.tracking_changes = track_changes
+    note_resolver = DataflowNoteResolver(footnotes)
+    raw_products_by_id = {obj.get('id'): obj for obj in json_objs if obj.get('id')}
+
+    # Write in json_catalogue to empty template doc (which already has table headers)
+    for mission in Mission:
+        for group in Group:
+            if stop_event and stop_event.is_set():
+                return io.BytesIO()
+
+            db_mission_group_products = json_catalogue.get_mission_and_group_products(mission, group)
+            if len(db_mission_group_products.products) == 0:
+                continue
+
+            mission_group_doc_tables = template.get_mission_group_table(mission, group)
+            if len(mission_group_doc_tables) == 0:
+                continue
+
+            mission_group_doc_table = DataflowDocTable(template, mission, group)
+            products = db_mission_group_products.products
+
+            def sort_key(prod: Product) -> str:
+                key = ""
+                for col in mission_group_doc_table.columns:
+                    val = prod[col]
+                    if issubclass(val.__class__, Enum):
+                        val = val.value
+                    key += str(val)
+                return key
+
+            products.sort(key=sort_key)
+
+            note_numbers_by_text: Dict[str, int] = {}
+
+            def register_notes(note_texts: List[str]) -> List[int]:
+                numbers: List[int] = []
+                for note_text in note_texts:
+                    if note_text not in note_numbers_by_text:
+                        note_numbers_by_text[note_text] = len(note_numbers_by_text) + 1
+                    numbers.append(note_numbers_by_text[note_text])
+                return numbers
+
+            selected_configuration = DATAFLOW_GROUP_NAME_MAP[mission_group_doc_table._group]
+            selected_mission = mission_group_doc_table._mission.name
+
+            header_note_numbers: Dict[Union[Column, Service], List[int]] = {}
+            for col in mission_group_doc_table.columns:
+                column_key = _column_to_note_key(col)
+                header_texts = note_resolver.get_header_note_texts(column_key, selected_mission, selected_configuration)
+                if header_texts:
+                    header_note_numbers[col] = register_notes(header_texts)
+            mission_group_doc_table.add_header_note_references(header_note_numbers)
+
+            for product in products:
+                raw_product = raw_products_by_id.get(product.id)
+                if not raw_product:
+                    raw_product = {
+                        'id': product.id,
+                        'mission': product.mission.name,
+                        'group': DATAFLOW_GROUP_NAME_MAP[product.group],
+                        'name': product.product_type,
+                        'payload': product.payload,
+                        'level': product.level,
+                        'sensor-mode': product.mode,
+                        'type': product.type,
+                        'description': product.description,
+                        'entities_relations': [],
+                    }
+
+                cell_note_numbers: Dict[Union[Column, Service], List[int]] = {}
+                for col in mission_group_doc_table.columns:
+                    column_key = _column_to_note_key(col)
+                    note_texts = note_resolver.get_cell_note_texts(raw_product, column_key, selected_mission, selected_configuration)
+                    if note_texts:
+                        cell_note_numbers[col] = register_notes(note_texts)
+
+                mission_group_doc_table.add_product_as_row(product, note_numbers_by_column=cell_note_numbers)
+
+            ordered_notes = sorted([(number, text) for text, number in note_numbers_by_text.items()], key=lambda item: item[0])
+            mission_group_doc_table.append_notes_below_table(ordered_notes)
+
+    buffer = io.BytesIO()
+    template.document.save(buffer)
+    buffer.seek(0)
+    return buffer
+
 class DataflowDocCreator:
     """
     Singleton responsible for dataflow document creation across the app
@@ -1496,55 +1855,11 @@ class DataflowDocCreator:
         self._upload_to_s3(official_doc_buffer, official=True)
 
     def _create_document(self, official: bool = False) -> io.BytesIO:
-        from apps.models.nosql.Graph import Graph
-
-        graph = Graph()
-        scen_graph = graph.find({'id': self.config_id})
-        json_objs = json.loads(scen_graph[0]['graph'])['product_types']
-
-        json_catalogue = load_dataflow_json_to_catalogue(json_objs)
-        template = WordGenerator(CURRENT_DATAFLOW_DOC_TEMPLATE)
-        template.tracking_changes = self.track_changes
-
-        # Write in json_catalogue to empty template doc (which already has table headers)
-        for mission in Mission:
-            for group in Group:
-                # If stop event has been triggered, terminate the document creation
-                if self._stop_event.is_set():
-                    return
-
-                db_mission_group_products = json_catalogue.get_mission_and_group_products(mission, group)
-                if len(db_mission_group_products.products) == 0:
-                    continue
-
-                mission_group_doc_tables = template.get_mission_group_table(mission, group)
-                if len(mission_group_doc_tables) == 0:
-                    continue
-
-                mission_group_doc_table = DataflowDocTable(template, mission, group)
-                products = db_mission_group_products.products
-
-                def sort_key(prod: Product) -> str:
-                    key = ""
-                    for col in mission_group_doc_table.columns:
-                        val = prod[col]
-
-                        if issubclass(val.__class__, Enum):
-                            val = val.value
-
-                        key += str(val)
-
-                    return key
-
-                products.sort(key=sort_key)
-                for product in db_mission_group_products.products:
-                    mission_group_doc_table.add_product_as_row(product)
-
-        buffer = io.BytesIO()
-        template.document.save(buffer)
-        buffer.seek(0)
-
-        return buffer
+        return _build_dataflow_document_buffer(
+            config_id=self.config_id,
+            track_changes=self.track_changes,
+            stop_event=self._stop_event,
+        )
 
     def _upload_to_s3(self, doc_buffer: io.BytesIO, official: bool = False):
         from apps import s3_client

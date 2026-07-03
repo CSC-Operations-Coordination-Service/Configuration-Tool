@@ -41,7 +41,7 @@ const exportDocument = function(button, isOfficial) {
     $.ajax({
         url: `/rest/api/dataflow/document`,
         method: 'GET',
-        data: { official: isOfficial ? 'true' : 'false' },
+        data: { id: configId, official: isOfficial ? 'true' : 'false' },
         xhrFields: { responseType: 'blob' },
         async: true,
         success: function(blob, status, xhr) {

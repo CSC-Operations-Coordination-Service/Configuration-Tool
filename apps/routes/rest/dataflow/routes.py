@@ -43,6 +43,8 @@ import apps.utils.db_utils as db_utils
 from apps.models.nosql.Graph import Graph
 from apps.routes.rest.dataflow import blueprint
 from apps.utils.word_document_generator import CURRENT_DATAFLOW_DOC_VERSION
+#testing dataflow doc generation
+from apps.utils.dataflow_doc_generator import generate_dataflow_document
 
 DEFAULT_DATAFLOW_CONFIG_ID = "627ad268_ce8c_11ef_8a52_514642c42857"
 
@@ -190,19 +192,25 @@ def get_dataflow_doc():
     Create a dataflow document.
 
     Query Parameters:
-        official (str): Whether to create the official document. One of: 
+        official (str): Whether to create the official document. One of:
         'true', or 'false'. Defaults to 'false'.
+        id (str): Configuration ID, used by direct-generation fallback.
     """
     import io
-    from flask import current_app, send_file
+    from flask import send_file
     from apps import s3_client
 
     get_official_doc = request.args.get('official', 'false').lower() == 'true'
+    config_id = request.args.get('id') or DEFAULT_DATAFLOW_CONFIG_ID
 
+    # Prefer cached S3 document for fast export.
     try:
+        if s3_client is None:
+            raise RuntimeError("S3 client is not available")
+
         buffer = io.BytesIO()
         s3_client.download_fileobj(
-            Bucket=current_app.config['S3_BUCKET'],
+            Bucket=current_app.config.get('S3_BUCKET', 'ocs-s3-configuration-config-tool-file-cache-staging'),
             Key=current_app.config["S3_DATAFLOW_DOC_OFFICIAL_KEY" if get_official_doc else "S3_DATAFLOW_DOC_UNOFFICIAL_KEY"],
             Fileobj=buffer
         )
@@ -216,7 +224,35 @@ def get_dataflow_doc():
         )
 
     except Exception as err:
-        return Response(json.dumps({'error': '500', 'message': err}), mimetype="application/json", status=500)
+        current_app.logger.warning(f"S3 export failed, falling back to direct generation: {err}")
+
+    # Fallback: generate document directly when S3 is unavailable.
+    try:
+        buffer = generate_dataflow_document(config_id, get_official_doc)
+        return send_file(
+            buffer,
+            as_attachment=True,
+            download_name=_generate_dataflow_doc_name(),
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+    except Exception as err:
+        current_app.logger.error(f"Dataflow export fallback failed: {err}")
+        return Response(
+            json.dumps({'error': '500', 'message': str(err)}),
+            mimetype="application/json",
+            status=500
+        )
+
+#testing dataflow doc generation (remove?)
+@blueprint.route('/rest/api/dataflow/document/direct', methods=['GET'])
+@login_required
+def get_dataflow_doc_direct():
+    """Generate and download dataflow document (no S3 dependency). Debug/dev only."""
+    from flask import send_file
+    config_id = request.args.get('id')
+    official = request.args.get('official', 'false').lower() == 'true'
+    buffer = generate_dataflow_document(config_id, official)
+    return send_file(buffer, as_attachment=True, download_name=_generate_dataflow_doc_name(), mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
 
 
 @blueprint.route('/rest/api/dataflow', methods=['POST'])
