@@ -26,17 +26,19 @@ __copyright__ = "Copyright 2024, Telespazio S.p.A."
 __license__ = "GPLv3"
 __status__ = "Production"
 __version__ = "1.0.0"
-
+import boto3
+import botocore.client
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from importlib import import_module
+from typing import Optional
 
 from apps.collectors.jira.ipf_collector import IPFCollector
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-
+s3_client: Optional[botocore.client.BaseClient] = None
 
 def register_extensions(app):
     db.init_app(app)
@@ -60,6 +62,24 @@ def configure_database(app):
     def shutdown_session(exception=None):
         db.session.remove()
 
+def configure_s3_client(app):
+
+    with app.app_context():
+        global s3_client
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=app.config['S3_ENDPOINT_URL'],
+            aws_access_key_id=app.config['S3_ACCESS_KEY'],
+            aws_secret_access_key=app.config['S3_SECRET_KEY'],
+            region_name=app.config['S3_REGION']
+        )
+
+def initialise_dataflow_doc_generator(app):
+    from apps.utils.word_document_generator import DataflowDocCreator
+    
+    app.dataflow_doc_creator = DataflowDocCreator(app)
+    # FIXME: Following is hard-coded value of config_id (acts as default)
+    app.dataflow_doc_creator.config_id = "627ad268_ce8c_11ef_8a52_514642c42857"
 
 def start_scheduler(app):
     def schedule_process():
@@ -130,7 +150,11 @@ def create_app(configuration):
     register_blueprints(app)
     print("Configuring database...")
     configure_database(app)
+    print("Configuring S3 client...")
+    configure_s3_client(app)
     print("Starting Scheduler ...")
+    initialise_dataflow_doc_generator(app)
+    print("Initialising Dataflow Document Generator ...")
     start_scheduler(app)
     print("Configuration Tool successfully started")
     return app

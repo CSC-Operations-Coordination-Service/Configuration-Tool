@@ -9,6 +9,48 @@
     <link rel="stylesheet" href="/static/assets/css/editors.css">
     <link rel="stylesheet" href="/static/assets/css/flowchart.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        .dataflow-notes-panel {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f9fbff;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        .dataflow-notes-panel .dataflow-notes-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: #f8f9fb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .dataflow-notes-panel .dataflow-notes-header h5 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1572E8;
+        }
+        .dataflow-notes-panel .dataflow-notes-context {
+            padding: 0.5rem 1rem;
+            font-size: 12px;
+            color: #6c757d;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .dataflow-notes-panel .table thead th {
+            font-size: 12px;
+            font-weight: 600;
+            background: #f8f9fb;
+            color: #495057;
+        }
+        .dataflow-notes-panel .table td,
+        .dataflow-notes-panel .table th {
+            vertical-align: middle;
+        }
+        .dataflow-note-slot .d-none {
+            display: none !important;
+        }
+    </style>
 {% endblock stylesheets %}
 
 {% block content %}
@@ -193,6 +235,109 @@
 
                             </div>
 
+                            <!-- Notes panel -->
+                             <div class="container-fluid">
+                                <div class="row mt-3 mb-3">
+                                    <div class="col-12 col-md-12">
+                                        <div class="dataflow-notes-panel">
+                                            <div class="dataflow-notes-header">
+                                                <h5><b>Notes</b> <span id="dataflow-note-count" class="badge badge-primary">0</span></h5>
+                                                <button id="dataflow-add-note-btn" class="btn btn-primary btn-sm" type="button">Add note</button>
+                                            </div>
+                                            <div id="dataflow-note-form" class="px-3 py-3" style="display: none; background: #ffffff; border-bottom: 1px solid #e5e7eb;">
+                                                <input id="dataflow-note-id" type="hidden">
+                                                <div class="form-row">
+                                                    <div class="form-group col-md-3">
+                                                        <label for="dataflow-note-matching-mission">Mission</label>
+                                                        <select id="dataflow-note-matching-mission" class="form-control">
+                                                            <option value="Sentinel-1">Sentinel-1</option>
+                                                            <option value="Sentinel-2">Sentinel-2</option>
+                                                            <option value="Sentinel-3">Sentinel-3</option>
+                                                            <option value="Sentinel-5P">Sentinel-5P</option>
+                                                            <option value="Sentinel-6">Sentinel-6</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-md-3">
+                                                        <label for="dataflow-note-group">Group</label>
+                                                        <select id="dataflow-note-group" class="form-control">
+                                                            <option value="Products">Products</option>
+                                                            <option value="AUX Data">AUX Data</option>
+                                                            <option value="MP and FOS files">MP and FOS files</option>
+                                                            <option value="OLQC Reports">OLQC Reports</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group col-md-3">
+                                                        <label for="dataflow-note-target-type">Target type</label>
+                                                        <select id="dataflow-note-target-type" class="form-control">
+                                                            <option value="cell">Value</option>
+                                                            <option value="header">Column</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-row">
+                                                    <div class="form-group col-md-3 dataflow-note-slot">
+                                                        <div id="dataflow-note-header-container" class="dataflow-note-slot-item d-none">
+                                                            <label for="dataflow-note-header">Column</label>
+                                                            <select id="dataflow-note-header" class="form-control">
+                                                                <option value="">Select column</option>
+                                                                <option value="name">Product Type</option>
+                                                                <option value="payload">Payload</option>
+                                                                <option value="level">Level</option>
+                                                                <option value="sensor-mode">Mode</option>
+                                                                <option value="type">Type</option>
+                                                            </select>
+                                                        </div>
+                                                        <div id="dataflow-note-column-selector-container" class="dataflow-note-slot-item">
+                                                            <label for="dataflow-note-column-selector">Column selector</label>
+                                                            <select id="dataflow-note-column-selector" class="form-control">
+                                                                <option value="">Select column</option>
+                                                                <option value="name">Product Type</option>
+                                                                <option value="payload">Payload</option>
+                                                                <option value="level">Level</option>
+                                                                <option value="sensor-mode">Mode</option>
+                                                                <option value="type">Type</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group col-md-3" id="dataflow-note-value-container" style="display: none;">
+                                                        <label id="dataflow-note-value-label" for="dataflow-note-value">Value</label>
+                                                        <input id="dataflow-note-value" class="form-control" type="text" placeholder="Enter value">
+                                                        <select id="dataflow-note-value-select" class="form-control" style="display: none;"></select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-row">
+                                                    <div class="form-group col-md-6">
+                                                        <label for="dataflow-note-text">Note text</label>
+                                                        <textarea id="dataflow-note-text" class="form-control" rows="2" placeholder="Enter the note text"></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-end">
+                                                    <button id="dataflow-note-cancel-btn" type="button" class="btn btn-secondary btn-sm mr-2">Cancel</button>
+                                                    <button id="dataflow-note-save-btn" type="button" class="btn btn-primary btn-sm">Save note</button>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table id="dataflow-notes-table" class="table table-sm mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 50px;">#</th>
+                                                            <th style="width: 220px;">Target</th>
+                                                            <th>Note</th>
+                                                            <th style="width: 120px;">Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="dataflow-notes-tbody">
+                                                        <tr id="dataflow-note-empty-row">
+                                                            <td colspan="4" class="text-center text-muted py-4">No notes added yet</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Save button -->
                             <div class="col-md-12">
                                 <div class="float-right">
@@ -251,5 +396,4 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-<script></script>
 {% endblock javascripts %}

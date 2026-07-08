@@ -37,19 +37,22 @@ class DocumentsViewer {
                                 'Mission Planning',
                                 'POD',
                                 'Production Service',
-                                'Reference System'],
-                         'Industrial Baseline': [
-                                'Acquisition - CADIP',
-                                'Acquisition - DDP',
-                                'Acquisition - EDRS',
-                                'ADGS',
-                                'LTA',
-                                'Mission Planning',
-                                'MPC',
-                                'POD',
-                                'PRIP',
-                                'Spacecraft',
-                                'Traceability']};
+                                'Reference System'
+                            ],
+                            'Industrial Baseline': [
+                                    'Acquisition - CADIP',
+                                    'Acquisition - DDP',
+                                    'Acquisition - EDRS',
+                                    'ADGS',
+                                    'LTA',
+                                    'Mission Planning',
+                                    'MPC',
+                                    'POD',
+                                    'PRIP',
+                                    'Spacecraft',
+                                    'Traceability'
+                            ]
+                        };
 
         this.documents = [];
 
