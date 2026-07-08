@@ -68,14 +68,10 @@ def configure_s3_client(app):
         global s3_client
         s3_client = boto3.client(
             's3',
-            # endpoint_url=app.config['S3_ENDPOINT_URL'],
-            # aws_access_key_id=app.config['S3_ACCESS_KEY'],
-            # aws_secret_access_key=app.config['S3_SECRET_KEY'],
-            # region_name=app.config['S3_REGION']
-            endpoint_url=app.config.get('S3_ENDPOINT_URL', 'https://s3.gra.perf.cloud.ovh.net'),
-            aws_access_key_id=app.config.get('S3_ACCESS_KEY', 'fdf4db0ee78d4646975ece5f2ac7e94a'),
-            aws_secret_access_key=app.config.get('S3_SECRET_KEY', 'e1aed81ad79d42618081afff18d6d50e'),
-            region_name=app.config.get('S3_REGION', 'gra')
+            endpoint_url=app.config['S3_ENDPOINT_URL'],
+            aws_access_key_id=app.config['S3_ACCESS_KEY'],
+            aws_secret_access_key=app.config['S3_SECRET_KEY'],
+            region_name=app.config['S3_REGION']
         )
 
 def initialise_dataflow_doc_generator(app):

@@ -210,7 +210,7 @@ def get_dataflow_doc():
 
         buffer = io.BytesIO()
         s3_client.download_fileobj(
-            Bucket=current_app.config.get('S3_BUCKET', 'ocs-s3-configuration-config-tool-file-cache-staging'),
+            Bucket=current_app.config['S3_BUCKET'],
             Key=current_app.config["S3_DATAFLOW_DOC_OFFICIAL_KEY" if get_official_doc else "S3_DATAFLOW_DOC_UNOFFICIAL_KEY"],
             Fileobj=buffer
         )
